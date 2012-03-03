@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block top %}
+<div id="signIn">
+  {% if user_name %}
+    <A class="menulink" HREF="/signout">Log out</A>
+    <A class="menulink" HREF="/profile">Settings</A>
+  {% else %}
+    <A class="menulink" HREF="/login">Log in</A>
+    <A class="menulink" HREF="/register">Sign up</A>
+  {% endif %}
+</div> 
+{% endblock %}
+
+{% block content %}   
+    <p class="greeting">
+      {% if user_name %}
+        <div class="caption2" align="center">Welcome, {{ user_name}}!</div>
+      {% else %}
+        <div style="width = 250px;height = 250px;margin-left: 20%;
+        margin-right: 10%;margin-top:5%;">
+        <div class="caption2">How to use @LanguageBot?</div>
+
+        <div class="listitems" align="left">
+        
+        1. Become upset with your vocabulary<br>
+        2. Create an account at languagebot.me<br>
+        3. Encounter a new word and send a message to @LanguageBot:<br>
+        <div class="message">amaranthine [am-uh-RAN-thin]: неувядающий, вечный</div>
+        4. @LangugeBot will start sending
+        messages back to you with all the new words you've added in random
+        fashion.<br>
+        5. You can also follow your friends to see what words they are
+        learning.<br>
+        6. Learn new words and become Scrabble champion!
+        </div>
+        </div>
+
+
+
+
+
+ 
+      {% endif %}
+    </p>   
+    
+{% endblock %}

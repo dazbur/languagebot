@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="box">
+  <div class="caption">Welcome back!</div>
+  <div class="account">
+    <form method="post">    
+    <fieldset>          
+      <div>
+      <label for="username">Twitter user</label>
+      <input type="text" name="username" class="textfield" value="{{ user_name }}"/>
+      </div>
+      
+      <div>
+      <label for="password">Password</label>
+      <input type="password" name="password" class="textfield" value="{{ password }}"/>
+      </div>
+      
+      {% ifequal login "fail" %}
+        <div class="error">Login failed. Wrong password or username</div>
+      {% endifequal %}
+        
+      <button class="coolButton" type=submit>Log In</button>
+    </fieldset>
+    </form>
+ <div class="account">
+<div class="box">
+
+{% endblock %}

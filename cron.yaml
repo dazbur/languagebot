@@ -1,0 +1,9 @@
+cron:
+- description: check incoming 
+  url: /check_incoming
+  schedule: every 3 minutes
+
+- description: send messages 
+  url: /send_messages
+  schedule: every 10 minutes
+

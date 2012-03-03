@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block top %}
+<div id="signIn">
+  {% if user %}
+    <A class="menulink" HREF="/signout">Log out</A>
+  {% else %}
+    <A class="menulink" HREF="/login">Log in</A>
+    <A class="menulink" HREF="/register">Sign up</A>
+  {% endif %}
+</div> 
+{% endblock %}
+
+{% block content %}
+<script type="text/javascript">
+function noNumbers(e)
+{
+var keynum;
+var keychar;
+var numcheck;
+
+if(window.event) // IE
+	{
+	keynum = e.keyCode;
+	}
+else if(e.which) // Netscape/Firefox/Opera
+	{
+	keynum = e.which;
+	}
+keychar = String.fromCharCode(keynum);
+numcheck = /\d/;
+return numcheck.test(keychar);
+}
+</script>
+
+{% if user %}
+<div class="box">
+<div class="caption">Settings</div>
+
+    <div class="profile">
+    <form method="post">                
+         <div> 
+         <div class="text">Repeat each word this many times:</div> 
+         <input class="textfieldsmall" type="text"  maxlength=2
+                name="repeat_times" value="{{user.repeat_times|escape}}"
+                onkeypress="return noNumbers(event)"/>
+        {% if model.repeat_times_empty%}    
+        <span class="error">please specify number of repetitions</span>
+        {% endif %}
+         </div>
+
+         <div> 
+         <div class="text">I want to get this many messages per day:</div> 
+         <input class="textfieldsmall" type="text"  maxlength=2
+                name="messages_per_day" value="{{user.messages_per_day|escape}}"
+                onkeypress="return noNumbers(event)"/>
+         {% if model.messages_per_day_empty%}    
+         <span class="error">please specify number of messages per day</span>
+         {% endif %}
+  
+         </div>
+
+
+        <div class="text">
+        <input type="checkbox" name="account_disabled" value="enabled"
+            {{model.is_account_disabled}}> 
+        I'm on vacation. Stop sending me messages!
+        </div><br>
+
+        <div class="text">I want to follow these users:</div>
+        <div class="text">
+        {% if  friends_list %}
+         {% ifequal friends_list.0 "not_authorized" %}
+            <div class="error">Can't retrieve the list of your
+            friends. Please allow @LanguageBot to follow you. The request was
+            sent when you signed up.</div>
+         {% else %}
+         {% for follow_user in friends_list %}
+             <input type="checkbox" name={{ follow_user }} value={{follow_user}}
+              {%for checked_user in i_follow_list %}
+                {% ifequal checked_user follow_user %}
+                  checked
+                {% endifequal %}
+               {% endfor %}>{{follow_user}}<br>
+         {% endfor %}
+         {% endifequal %}
+        {% else %}
+            <div class="hintpwd">None of your friends is using LanguageBot :(</div>
+        {% endif %}
+        </br>
+        </div>
+
+    
+        <div><button class="coolButton" type="submit" />Update</div>    
+    </form>
+    </div>
+<div class="box">
+{% endif %}
+{% endblock %}
+
+

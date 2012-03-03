@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="box">  
+  <div class="caption">
+  Sign up is easy! 
+  </div>
+  <div class="account">
+  <form method="post">                
+  <fieldset>
+    
+    <div>
+    <label>{{word.word|escape}}</label>
+    <input class="textfield" type="text" name="level"/>
+    <button class="coolButton" type=submit name="level1">Submit</button>
+
+    </div>
+    
+
+ </fieldset>
+ </form>
+</div>
+</div>
+  
+{% endblock %}

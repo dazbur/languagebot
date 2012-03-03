@@ -1,0 +1,233 @@
+body{  
+    font-family: Arial, sans-serif;
+    letter-spacing: -1pt;
+    background-color: white;
+
+}    
+
+#main{
+ width = 32em;    
+ margin-left:auto;
+ margin-right:auto;
+}
+
+.caption{
+ position: relative;
+ font-family: times, Times New Roman, times-roman, georgia, serif;
+ font-size: 48px;
+ line-height: 40px;
+ letter-spacing: -1px;
+ color: black;
+ margin: 0 0 0 0;
+ padding: 0 0 0 0;
+ font-weight: 100;
+ right: 20px;
+}
+
+.caption2{
+ position: relative;
+ font-family: times, Times New Roman, times-roman, georgia, serif;
+ font-size: 48px;
+ line-height: 40px;
+ letter-spacing: -1px;
+ color: black;
+ margin: 0 0 0 0;
+ padding: 0 0 0 0;
+ font-weight: 100;
+ right: 60px;
+
+}
+
+.listitems{
+ font-family:  times, Times New Roman, times-roman, georgia, serif;
+ font-size: 180%;
+ line-height: 38px;
+ letter-spacing: -1px;
+ text-align: left;
+ color: black;
+ margin: 0 0 0 0;
+ padding: 0 0 0 0;
+ font-weight: 100;
+ right: 0px;
+}
+
+.message{
+ font-family: Arial, serif;
+ font-size: 120%;
+ line-height: 30x;
+ letter-spacing: 0px;
+ text-align: left;
+ color: black;
+ margin: 10 0 10 0;
+ padding: 0 0 0 0;
+ font-weight: 100;
+ right: 0px;
+}
+
+.hint{
+ font-family:Arial, sans-serif;
+ font-size: 20px;
+ line-height: 10px;
+ letter-spacing: 2px;
+ text-align: left;
+ color: grey;
+ margin:  5 0 10 300;
+ padding: 0 0 0 0;
+ font-weight: 100;
+ right: 0px;
+}
+
+.hintpwd{
+ font-family:Arial, sans-serif;
+ font-size: 14px;
+ line-height: 0px;
+ letter-spacing: 0px;
+ text-align: left;
+ color: grey;
+ margin:  10 0 0 0;
+ padding: 0 0 0 0;
+ font-weight: 100;
+ right: 0px;
+}
+
+
+.menulink{
+font-size: 24px;
+
+}
+
+
+.box{
+ width = 250px;
+ height = 250px;
+ margin-left: 35%; 
+ margin-right: 40%;    
+ margin-top: 5%;
+
+}
+
+.profile fieldset{
+  width: 12em;
+  border-width: 0px;
+  text-align: left;
+  padding-left: 2em;
+
+}
+
+.profile label {
+ float: left;
+    width: 40em;
+    font-size: 130%;
+    letter-spacing: -1px;color: #444;
+}
+
+.text{
+ font-size: 130%;
+ letter-spacing: -1px;color: #444;
+ margin-top:5px;
+
+
+}
+
+
+
+.radiogroup{
+    font-size: 120%;
+    letter-spacing: -1px;color: #444;
+    margin-left:10px;
+    margin-top:5px;
+}
+
+
+.account fieldset{
+  width: 32em;
+  border-width: 0px;
+  text-align: left;
+  padding-left: 2em;
+
+}
+
+.account label {
+ float: left;
+    width: 12em;
+    font-size: 130%;
+    letter-spacing: -1px;color: #444;
+}
+
+.textfield{
+  height: 28px;
+  width: 15em;
+  font-size: 130%;
+  border-style:solid; 
+  border-color:#000000; 
+  border-width: 1px; 
+  background-color:white;
+}
+
+.textfieldsmall{
+  height: 28px;
+  width: 2em;
+  font-size: 130%;
+  border-style:solid; 
+  border-color:#000000; 
+  border-width: 1px; 
+  background-color:white;
+
+}
+
+
+.coolButton {
+	-moz-box-shadow:inset 0px 1px 0px 0px #caefab;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #caefab;
+	box-shadow:inset 0px 1px 0px 0px #caefab;
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #77d42a), color-stop(1, #5cb811) );
+	background:-moz-linear-gradient( center top, #77d42a 5%, #5cb811 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#77d42a', endColorstr='#5cb811');
+	background-color:#77d42a;
+	-moz-border-radius:42px;
+	-webkit-border-radius:42px;
+	border-radius:42px;
+        border:0;
+	display:inline-block;
+	color:#306108;
+	font-family:arial;
+        letter-spacing:-1.5pt;
+	font-size:21px;
+	font-weight:bold;
+	padding:7px 24px;
+	text-decoration:none;
+	text-shadow:1px 1px 0px #aade7c;
+}.coolButton:hover {
+	background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #5cb811), color-stop(1, #77d42a) );
+	background:-moz-linear-gradient( center top, #5cb811 5%, #77d42a 100% );
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#5cb811', endColorstr='#77d42a');
+	background-color:#5cb811;
+}.coolButton:active {
+	position:relative;
+	top:1px;
+}
+
+
+.account div{
+  padding-bottom: 10px;
+}
+
+.greeting{  
+  font-size: 200%;  
+  text-align: center;  
+}
+
+#signIn{    
+  text-align: right;
+}
+
+#signIn a{
+  padding-left: 1em;
+}
+
+.error{
+ color: red;
+ letter-spacing: 0pt;
+
+
+}

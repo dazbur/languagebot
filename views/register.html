@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="box">  
+  <div class="caption">
+  Sign up is easy! 
+  </div>
+  <div class="account">
+  <form method="post">                
+  <fieldset>
+    
+    <div>
+    <label>Twitter user</label>
+    <input class="textfield" type="text" name="twitter_name" value="{{model.twitter_name|escape}}"/>
+    {% if model.twitter_name_empty%}    
+    <span class="error">please provide user name</span>
+    {% endif %}
+    </div>
+    
+    <div>
+    <label for="password">Create password</label>
+    <input class="textfield" type="password" name="password"/>
+    <div class="hintpwd">not your twitter password. Create a new one.</div>
+    {% if model.password_empty%}    
+    <span class="error">please enter a password</span>
+    {% endif %}
+    </div>
+    
+    <div>
+    <label for="confirm_password">Confirm password</label>    
+    <input class="textfield" type="password" name="confirm_password"/>    
+    {% if model.passwords_dont_match%}    
+    <span class="error">confirmation doesn't match</span>
+    {% endif %}
+    </div>
+ 
+    <label>To confirm your twitter account please post the following tweet:
+    @LanguageBot {{model.registration_code}} and click Register</label>
+    {% if model.code_not_received%}    
+    <span class="error">You have not sent verification code to @LanguageBot.
+    Please send the code above and try again. Note that it may take a few
+    moments for Twitter to process your message.</span>
+    {% endif %}
+    </div>
+    <div>
+    <button class="coolButton" type=submit>Register</button>
+    </div>
+
+ </fieldset>
+ </form>
+</div>
+</div>
+  
+{% endblock %}
