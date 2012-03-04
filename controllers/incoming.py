@@ -50,9 +50,7 @@ class CheckIncoming(webapp.RequestHandler):
         self.twitter = Twitter.getInstance()
         super(CheckIncoming, self).__init__()
     
-    def processMessage(self, message, message_type):
         
-        # DirectMessage and Replies are different objects with different
         # attributes. You can get addressee name by checking current
         # Twitter bot username, but this requires additional API call 
         if message_type == "reply":

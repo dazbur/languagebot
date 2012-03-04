@@ -1,4 +1,6 @@
 from models.learnlist import LearnList
+
+
 # It would be easier to just use this approach for now:
 # if answer_rating=0 (no answer at all or completely incorrect answer) then ef'= -0.2
 # if answer_rating=1 (correct answer for at least one meaning) then ef' = 0.1
@@ -16,7 +18,7 @@ def get_next_interval(n,prev_interval,prev_efactor,answer_rating):
         new_efactor = prev_efactor + 0.1
 
     return {'new_interval':round(new_interval,2),\
-    'new_efactor':round(new_efactor,2)}
+        'new_efactor':round(new_efactor,2)}
 
 def add_new_item(twitter_user, word_id):
     l = LearnList()
