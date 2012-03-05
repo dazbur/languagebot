@@ -4,14 +4,22 @@ import appcfg
 appcfg.fix_sys_path()
 
 import unittest
-from google.appengine.ext import db
-from google.appengine.ext import testbed
-from controllers.incoming import parseMessage 
-from controllers.learnlist import get_next_interval
-from controllers.learnlist import add_new_item
-from models.learnlist import LearnList
+from google.appengine.ext   import db
+from google.appengine.ext   import testbed
+from django.utils           import simplejson
 
-class TestMessageParsing (unittest.TestCase):
+from controllers.incoming   import parseMessage 
+from controllers.incoming   import processMessage
+from controllers.learnlist  import get_next_interval
+from controllers.learnlist  import add_new_item
+
+from models.learnlist       import LearnList
+from models.dictionary      import Dictionary
+from models.users           import User
+
+from twitter                import Status
+
+class TestMessageParsing(unittest.TestCase):
     
     def testParsing1(self):
         message = "@LanguageBot capex: capital expenditures; капитальные затраты"
@@ -37,7 +45,72 @@ class TestMessageParsing (unittest.TestCase):
         result = parseMessage(message, "LanguageBot")
         self.assertEqual(result, {})
 
-class TestLearningList (unittest.TestCase):
+
+class TestProcessMessage(unittest.TestCase):
+    
+    def setUp(self):
+        self.testbed = testbed.Testbed()
+        self.testbed.activate()
+        self.testbed.init_datastore_v3_stub()
+
+        # Preparing datastore by prepopulating some data
+        user = User()
+        user.username = "ny_blin"
+        user.twitter =  "ny_blin"
+        user.put()
+
+    def tearDown(self):
+        self.testbed.deactivate()
+
+    def testProcessMessageNormalAddForExistingUser(self):
+        json_file = open("files/message1.json")
+        message_json = simplejson.load(json_file)
+        twitter_status = Status.NewFromJsonDict(message_json)
+        processMessage(twitter_status)
+        query = Dictionary.all()        
+        results =   query.fetch(1)
+        self.assertEqual(1, len(results))
+        self.assertEqual("", results[0].pronounce)
+        self.assertEqual("ny_blin", results[0].twitter_user)
+        self.assertEqual(171632287904043008, results[0].message_id)
+        self.assertEqual("ferociously(en)", results[0].word)
+        self.assertEqual(u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.", results[0].meaning)
+        self.assertEqual(0, results[0].served)
+        self.assertEqual(None, results[0].source_lang)
+
+    def testProcessMessageFromNonExistentUser(self):
+        # Message from user "spammer" who doesn't exist in database
+        # It must not be processed and must not be saved
+        json_file = open("files/message2.json")
+        message_json = simplejson.load(json_file)
+        twitter_status = Status.NewFromJsonDict(message_json)
+        processMessage(twitter_status)
+        query = Dictionary.all()        
+        results =   query.fetch(1)
+        self.assertEqual(0, len(results))
+        self.assertEqual("spammer", twitter_status.user.screen_name)
+
+    def testProcessMessageFromExistingUserButNotReply(self):
+        # Message from exsitng user, but not a reply
+        # Such messages, like retweets must not me added
+        json_file = open("files/message3.json")
+        message_json = simplejson.load(json_file)
+        twitter_status = Status.NewFromJsonDict(message_json)
+        processMessage(twitter_status)
+        query = Dictionary.all()        
+        results =   query.fetch(1)
+        self.assertEqual(0, len(results))
+        self.assertEqual("ny_blin", twitter_status.user.screen_name)
+
+        
+        
+
+
+
+        
+
+
+class TestLearningList(unittest.TestCase):
     def setUp(self):
         # First, create an instance of the Testbed class.
         self.testbed = testbed.Testbed()
@@ -45,7 +118,6 @@ class TestLearningList (unittest.TestCase):
         self.testbed.activate()
         # Next, declare which service stubs you want to use.
         self.testbed.init_datastore_v3_stub()
-        self.testbed.init_memcache_stub()
     
     def tearDown(self):
         self.testbed.deactivate()
