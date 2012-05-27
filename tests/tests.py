@@ -4,18 +4,22 @@ import appcfg
 appcfg.fix_sys_path()
 
 import unittest
+import datetime
+import time
 from google.appengine.ext   import db
 from google.appengine.ext   import testbed
 from django.utils           import simplejson
 
+
 from controllers.incoming   import parseMessage 
 from controllers.incoming   import processMessage
-from controllers.learnlist  import get_next_interval
-from controllers.learnlist  import add_new_item
-
+from controllers.learnlist  import getNextInterval
+from controllers.learnlist  import addNewLearnListItem
+from controllers.learnlist  import buildDailyList
 from models.learnlist       import LearnList
 from models.dictionary      import Dictionary
 from models.users           import User
+from models.dailylist       import DailyList
 
 from twitter                import Status
 
@@ -52,7 +56,6 @@ class TestProcessMessage(unittest.TestCase):
         self.testbed = testbed.Testbed()
         self.testbed.activate()
         self.testbed.init_datastore_v3_stub()
-
         # Preparing datastore by prepopulating some data
         user = User()
         user.username = "ny_blin"
@@ -77,6 +80,12 @@ class TestProcessMessage(unittest.TestCase):
         self.assertEqual(u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.", results[0].meaning)
         self.assertEqual(0, results[0].served)
         self.assertEqual(None, results[0].source_lang)
+        # Test integration with LearnList
+        query = LearnList.all()
+        ll_results = query.fetch(2)
+        self.assertEqual(1, len(ll_results))
+        # Check if LearnList references same object
+        self.assertEqual(ll_results[0].dict_entry.key(), results[0].key())
 
     def testProcessMessageFromNonExistentUser(self):
         # Message from user "spammer" who doesn't exist in database
@@ -89,6 +98,10 @@ class TestProcessMessage(unittest.TestCase):
         results =   query.fetch(1)
         self.assertEqual(0, len(results))
         self.assertEqual("spammer", twitter_status.user.screen_name)
+        # Test integration with LearnList
+        query = LearnList.all()
+        ll_results = query.fetch(2)
+        self.assertEqual(0, len(ll_results))
 
     def testProcessMessageFromExistingUserButNotReply(self):
         # Message from exsitng user, but not a reply
@@ -101,13 +114,10 @@ class TestProcessMessage(unittest.TestCase):
         results =   query.fetch(1)
         self.assertEqual(0, len(results))
         self.assertEqual("ny_blin", twitter_status.user.screen_name)
-
-        
-        
-
-
-
-        
+        # Test integration with LearnList
+        query = LearnList.all()
+        ll_results = query.fetch(2)
+        self.assertEqual(0, len(ll_results))
 
 
 class TestLearningList(unittest.TestCase):
@@ -118,11 +128,45 @@ class TestLearningList(unittest.TestCase):
         self.testbed.activate()
         # Next, declare which service stubs you want to use.
         self.testbed.init_datastore_v3_stub()
+                
     
     def tearDown(self):
         self.testbed.deactivate()
+
+    # Helper methods for sample data loadinf: createUser,
+    # createDictEntry, createLearnListItem
+    def createUser(self, twitter_user, account_status, messages_per_day):
+        user = User()
+        user.twitter = twitter_user
+        user.username = twitter_user
+        user.account_status = account_status
+        user.messages_per_day = messages_per_day
+        user.put()
+        return user
+
+    def createDictEntry(self, twitter_user, message_id, word, meaning):
+        dictEntry = Dictionary()
+        dictEntry.twitter_user = twitter_user
+        dictEntry.message_id = message_id
+        dictEntry.word = word
+        dictEntry.pronounce = ""
+        dictEntry.meaning = meaning
+        dictEntry.served = 0
+        dictEntry.source_lang = ""
+        dictEntry.target_lang = ""
+        dictEntry.put()
+        return dictEntry
+
+    def createLearnListItem(self, twitter_user, dict_entry, next_serve_date):
+        learnListItem = LearnList()
+        learnListItem.twitter_user = twitter_user
+        learnListItem.dict_entry = dict_entry
+        learnListItem.next_serve_date = next_serve_date
+        learnListItem.next_serve_time = 0
+        learnListItem.put()
+        return learnListItem        
     
-    def testGet_next_interval(self):
+    def testGetNextInterval(self):
         l = [0,0,1,1]
         n = 0
         res = []
@@ -131,7 +175,7 @@ class TestLearningList(unittest.TestCase):
 
         for i in l:
             n = n + 1
-            r = get_next_interval(n, prev_interval, prev_efactor,\
+            r = getNextInterval(n, prev_interval, prev_efactor,\
             i)
             res.append(r)
             prev_interval = r["new_interval"]
@@ -141,19 +185,116 @@ class TestLearningList(unittest.TestCase):
             {'new_interval': 3.9, 'new_efactor':1.4},\
             {'new_interval':5.46, 'new_efactor':1.5}])
 
-    def testAddNewItem(self):
-        add_new_item("da_zbur",1234)
-        query = LearnList.all().filter('twitter_user =','da_zbur').\
-            filter('word_id =',1234)
+    def testAddNewLearnListItem(self):
+        # Preparing datastore by prepopulating some data
+        user = User()
+        user.username = "ny_blin"
+        user.twitter =  "ny_blin"
+        user.put()
+        json_file = open("files/message1.json")
+        message_json = simplejson.load(json_file)
+        twitter_status = Status.NewFromJsonDict(message_json)
+        processMessage(twitter_status)
+        query = LearnList.all().filter('twitter_user =','ny_blin')
         results = query.fetch(2)
         self.assertEqual(1, len(results))
-        self.assertEqual('da_zbur', results[0].twitter_user)
-        self.assertEqual(1234, results[0].word_id)
+        self.assertEqual('ny_blin', results[0].twitter_user)
         self.assertEqual(2, results[0].interval_days)
         self.assertEqual(1.5, results[0].efactor)
         self.assertEqual(0, results[0].total_served)
-    
+        now_plus_two = datetime.date.today() +\
+            datetime.timedelta(days=2)
+        self.assertEqual(now_plus_two, results[0].next_serve_date)      
+
+    def testBuildDailyList(self):
+        # Prepare 4 users: 3 active one disabled, one with 
+        # limit of messages per day
+        self.createUser("ny_blin","enabled",10)
+        self.createUser("da_zbur","enabled",10)
+        self.createUser("mr_qizz","disabled",10)
+        self.createUser("mr_2_per_day","enabled",2)
+
+        d1 = self.createDictEntry("ny_blin",1,"cat",u"котик")
+        d2 = self.createDictEntry("da_zbur",2,"dog",u"собачка")
+        d3 = self.createDictEntry("da_zbur",3,"heron",u"цапля")
+        d4 = self.createDictEntry("mr_qizz",4,"raccoon",u"енотик")
+
+        today = datetime.date.today()
+        tomorrow = today + datetime.timedelta(days=1)
+        current_timestamp = int(time.time())
+
+        self.createLearnListItem("ny_blin",d1,today)
+        self.createLearnListItem("da_zbur",d2,today)
+        self.createLearnListItem("da_zbur",d3,today)
+        self.createLearnListItem("da_zbur",d4,tomorrow)
+        self.createLearnListItem("mr_qizz",d4,today)
+        self.createLearnListItem("mr_2_per_day",d1,today)
+        self.createLearnListItem("mr_2_per_day",d2,today)
+        self.createLearnListItem("mr_2_per_day",d3,today)
+        self.createLearnListItem("mr_2_per_day",d4,today)
         
+        buildDailyList(today)
+        dailyList = []
+        for i in  LearnList.all().filter("next_serve_date =",today).run():
+            dailyList.append(i)
+        self.assertEqual(6, len(dailyList))
+        
+        self.assertEqual("ny_blin", dailyList[0].twitter_user)
+        self.assertEqual(d1.key(), dailyList[0].dict_entry.key())
+        self.assertNotEqual(0, dailyList[0].next_serve_time)
+        # Check if new timestamp is within next 24 hours
+        self.assertTrue(current_timestamp+24*3600 > dailyList[0].next_serve_time)
+        self.assertTrue(current_timestamp < dailyList[0].next_serve_time)
+        
+        self.assertEqual("da_zbur", dailyList[1].twitter_user)
+        self.assertEqual(d2.key(), dailyList[1].dict_entry.key())
+        self.assertNotEqual(0, dailyList[1].next_serve_time)
+
+        self.assertEqual("da_zbur", dailyList[2].twitter_user)
+        self.assertEqual(d3.key(), dailyList[2].dict_entry.key())
+        self.assertNotEqual(0, dailyList[2].next_serve_time)
+
+        self.assertEqual("mr_qizz", dailyList[3].twitter_user)
+        self.assertEqual(0, dailyList[3].next_serve_time)
+        
+        self.assertEqual("mr_2_per_day", dailyList[4].twitter_user)
+        self.assertEqual(d1.key(), dailyList[4].dict_entry.key())
+        self.assertNotEqual(0, dailyList[4].next_serve_time)
+
+        self.assertEqual("mr_2_per_day", dailyList[5].twitter_user)
+        self.assertEqual(d2.key(), dailyList[5].dict_entry.key())
+        self.assertNotEqual(0, dailyList[5].next_serve_time)
+
+        # Now let's check if 2 messages for mr_2_per day got rescheduled 
+        # for tomorrow. Plus there is a message for da_zbur scheduled for
+        # tomorrow as well
+        buildDailyList(tomorrow)
+        dailyList = []
+        for i in  LearnList.all().filter("next_serve_date =",tomorrow).run():
+            dailyList.append(i)
+        self.assertEqual(3, len(dailyList))
+
+        self.assertEqual("da_zbur", dailyList[0].twitter_user)
+        self.assertEqual(d4.key(), dailyList[0].dict_entry.key())
+        self.assertNotEqual(0, dailyList[0].next_serve_time)
+        
+
+        self.assertEqual("mr_2_per_day", dailyList[1].twitter_user)
+        self.assertEqual(d3.key(), dailyList[1].dict_entry.key())
+        self.assertNotEqual(0, dailyList[1].next_serve_time)
+
+        self.assertEqual("mr_2_per_day", dailyList[2].twitter_user)
+        self.assertEqual(d4.key(), dailyList[2].dict_entry.key())
+        self.assertNotEqual(0, dailyList[2].next_serve_time)
+
+        # Finally let's check that building tomorrow's list didn't screw up
+        # the today's list        
+        dailyList = []
+        for i in  LearnList.all().filter("next_serve_date =",today).run():
+            dailyList.append(i)
+        self.assertEqual(6, len(dailyList))
+
+
         
 if __name__ == "__main__":
     unittest.main()        

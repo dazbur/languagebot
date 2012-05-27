@@ -1,16 +1,19 @@
 # coding=utf8
-import re
+
 from google.appengine.ext import webapp
 from apiclient.discovery import build
+import re
 
 from twitter_auth import Twitter
 from models.dictionary import Dictionary
 from models.users import User
 from models.status import TwitterStatus
+from controllers.learnlist import LearnList, getNextInterval, addNewLearnListItem
 
 def parseMessage(message, botname):
     result = {}
     message = message.strip()
+
 
     # We need to make sure that @botname is at the begenning of the message. 
     # Message like "I love @LanguageBot :)" should be ignored
@@ -54,6 +57,7 @@ def addNewDictEntry(twitter_user, message_id,  entry, served):
     dict_entry.served = served
     dict_entry.source_lang = entry["source_lang"]
     dict_entry.put()
+    return dict_entry
 
 def processMessage(message):
         
@@ -94,7 +98,8 @@ def processMessage(message):
 
         parsed_dict["source_lang"] = source_lang
 
-        addNewDictEntry(twitter_user, message.id, parsed_dict, 0)
+        new_dict_entry = addNewDictEntry(twitter_user, message.id, parsed_dict, 0)
+        addNewLearnListItem (twitter_user, new_dict_entry)
 
 
 class CheckIncoming(webapp.RequestHandler):
