@@ -9,17 +9,18 @@ import time
 from google.appengine.ext   import db
 from google.appengine.ext   import testbed
 from django.utils           import simplejson
-
+from twitter_mockup         import TwitterMockup
 
 from controllers.incoming   import parseMessage 
 from controllers.incoming   import processMessage
 from controllers.learnlist  import getNextInterval
 from controllers.learnlist  import addNewLearnListItem
 from controllers.learnlist  import buildDailyList
+from controllers.learnlist  import prepareTwitterMessage
+from controllers.learnlist  import sendMessages
 from models.learnlist       import LearnList
 from models.dictionary      import Dictionary
 from models.users           import User
-from models.dailylist       import DailyList
 
 from twitter                import Status
 
@@ -77,7 +78,8 @@ class TestProcessMessage(unittest.TestCase):
         self.assertEqual("ny_blin", results[0].twitter_user)
         self.assertEqual(171632287904043008, results[0].message_id)
         self.assertEqual("ferociously(en)", results[0].word)
-        self.assertEqual(u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.", results[0].meaning)
+        self.assertEqual(u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.",\
+         results[0].meaning)
         self.assertEqual(0, results[0].served)
         self.assertEqual(None, results[0].source_lang)
         # Test integration with LearnList
@@ -144,12 +146,13 @@ class TestLearningList(unittest.TestCase):
         user.put()
         return user
 
-    def createDictEntry(self, twitter_user, message_id, word, meaning):
+    def createDictEntry(self, twitter_user, message_id, word, meaning,\
+         pronounce=""):
         dictEntry = Dictionary()
         dictEntry.twitter_user = twitter_user
         dictEntry.message_id = message_id
         dictEntry.word = word
-        dictEntry.pronounce = ""
+        dictEntry.pronounce = pronounce
         dictEntry.meaning = meaning
         dictEntry.served = 0
         dictEntry.source_lang = ""
@@ -163,6 +166,7 @@ class TestLearningList(unittest.TestCase):
         learnListItem.dict_entry = dict_entry
         learnListItem.next_serve_date = next_serve_date
         learnListItem.next_serve_time = 0
+        learnListItem.total_served = 0
         learnListItem.put()
         return learnListItem        
     
@@ -293,6 +297,33 @@ class TestLearningList(unittest.TestCase):
         for i in  LearnList.all().filter("next_serve_date =",today).run():
             dailyList.append(i)
         self.assertEqual(6, len(dailyList))
+
+    def testPrepareTwitterMessage(self):
+        self.createUser("da_zbur","enabled",10)
+        # Test word with pronounciation
+        d1 = self.createDictEntry("da_zbur",2,"lucrative",\
+            u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
+        # Test word without pronounciation
+        d2 = self.createDictEntry("da_zbur",2,"ferociously(en)",\
+            u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.")
+        today = datetime.date.today()    
+        l1 = self.createLearnListItem("da_zbur",d1,today)
+        l2 = self.createLearnListItem("da_zbur",d2,today)
+        message = prepareTwitterMessage(l1)
+        message2 = prepareTwitterMessage(l2)
+
+        self.assertEqual("@da_zbur lucrative[LOO-kruh-tiv]: profitable, \
+moneymaking, remunerative [1]", message)
+        self.assertEqual(u"@da_zbur ferociously(en): жестоко, \
+яростно, свирепо, дико, неистово. Ужасно, невыносимо. [1]", message2)
+
+    def testSendMessages(self):
+        Twitter = TwitterMockup()
+        message = sendMessages(Twitter)
+        self.assertEqual("blah!", message)
+
+
+        
 
 
         
