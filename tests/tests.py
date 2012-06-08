@@ -160,13 +160,14 @@ class TestLearningList(unittest.TestCase):
         dictEntry.put()
         return dictEntry
 
-    def createLearnListItem(self, twitter_user, dict_entry, next_serve_date):
+    def createLearnListItem(self, twitter_user, dict_entry,\
+        next_serve_date, next_serve_time=0):
         learnListItem = LearnList()
         learnListItem.twitter_user = twitter_user
         learnListItem.dict_entry = dict_entry
         learnListItem.next_serve_date = next_serve_date
-        learnListItem.next_serve_time = 0
-        learnListItem.total_served = 0
+        learnListItem.next_serve_time = next_serve_time
+        learnListItem.total_served = 1
         learnListItem.put()
         return learnListItem        
     
@@ -179,8 +180,7 @@ class TestLearningList(unittest.TestCase):
 
         for i in l:
             n = n + 1
-            r = getNextInterval(n, prev_interval, prev_efactor,\
-            i)
+            r = getNextInterval(n, prev_interval, prev_efactor,i)
             res.append(r)
             prev_interval = r["new_interval"]
             prev_efactor = r["new_efactor"]
@@ -205,7 +205,7 @@ class TestLearningList(unittest.TestCase):
         self.assertEqual('ny_blin', results[0].twitter_user)
         self.assertEqual(2, results[0].interval_days)
         self.assertEqual(1.5, results[0].efactor)
-        self.assertEqual(0, results[0].total_served)
+        self.assertEqual(1, results[0].total_served)
         now_plus_two = datetime.date.today() +\
             datetime.timedelta(days=2)
         self.assertEqual(now_plus_two, results[0].next_serve_date)      
@@ -319,12 +319,58 @@ moneymaking, remunerative [1]", message)
 
     def testSendMessages(self):
         Twitter = TwitterMockup()
-        message = sendMessages(Twitter)
-        self.assertEqual("blah!", message)
+        today = datetime.date.today()
+
+        self.createUser("da_zbur","enabled",10)
+        d1 = self.createDictEntry("da_zbur",2,"lucrative",\
+            u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
+        current_time = int(time.time())
+        l1 = self.createLearnListItem("da_zbur",d1,today, current_time)
+        messages_generator = sendMessages(Twitter)
+        m_list = []
+        while True:
+            try:
+                message = messages_generator.next()
+            except StopIteration:
+                break
+            m_list.append(message)
+        # Testing that LearnListItem was rescheduled properly
+        ll = LearnList.all().fetch(1)[0]
+        self.assertEqual(2, ll.interval_days)
+        self.assertEqual(1.5, ll.efactor)
+        self.assertEqual(2, ll.total_served)
+        self.assertEqual(today + datetime.timedelta(days=2), ll.next_serve_date)
+
+        self.assertEqual(["@da_zbur lucrative[LOO-kruh-tiv]: profitable, \
+moneymaking, remunerative [1]"], m_list)
+
+    def testSendMessagesDisabled(self):
+        # Testing that message for disabled user is not sent
+        # But rescheduled to next day
+        Twitter = TwitterMockup()
+        today = datetime.date.today()
+
+        self.createUser("da_zbur","disabled",10)
+        d1 = self.createDictEntry("da_zbur",2,"lucrative",\
+            u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
+        current_time = int(time.time())
+        l1 = self.createLearnListItem("da_zbur",d1,today, current_time)
+        messages_generator = sendMessages(Twitter)
+        m_list = []
+        while True:
+            try:
+                message = messages_generator.next()
+            except StopIteration:
+                break
+            m_list.append(message)
+        # Testing that LearnListItem was rescheduled properly
+        ll = LearnList.all().fetch(1)[0]
+        self.assertEqual(1, ll.total_served)
+        self.assertEqual(today + datetime.timedelta(days=1), ll.next_serve_date)
+        self.assertEqual([None], m_list)
 
 
         
-
 
         
 if __name__ == "__main__":
