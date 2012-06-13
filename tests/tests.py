@@ -1,11 +1,13 @@
 # coding=utf8
 
 import appcfg
+import logging
 appcfg.fix_sys_path()
 
 import unittest
 import datetime
 import time
+from google.appengine.ext   import webapp
 from google.appengine.ext   import db
 from google.appengine.ext   import testbed
 from django.utils           import simplejson
@@ -17,7 +19,9 @@ from controllers.learnlist  import getNextInterval
 from controllers.learnlist  import addNewLearnListItem
 from controllers.learnlist  import buildDailyList
 from controllers.learnlist  import prepareTwitterMessage
-from controllers.learnlist  import sendMessages
+from controllers.learnlist  import sendMessagesGenerator
+from controllers.details    import getParameters
+from controllers.learnlist  import calculateAnswerRating
 from models.learnlist       import LearnList
 from models.dictionary      import Dictionary
 from models.users           import User
@@ -237,7 +241,7 @@ class TestLearningList(unittest.TestCase):
         self.createLearnListItem("mr_2_per_day",d3,today)
         self.createLearnListItem("mr_2_per_day",d4,today)
         
-        buildDailyList(today)
+        buildDailyList(today, logging)
         dailyList = []
         for i in  LearnList.all().filter("next_serve_date =",today).run():
             dailyList.append(i)
@@ -272,7 +276,7 @@ class TestLearningList(unittest.TestCase):
         # Now let's check if 2 messages for mr_2_per day got rescheduled 
         # for tomorrow. Plus there is a message for da_zbur scheduled for
         # tomorrow as well
-        buildDailyList(tomorrow)
+        buildDailyList(tomorrow, logging)
         dailyList = []
         for i in  LearnList.all().filter("next_serve_date =",tomorrow).run():
             dailyList.append(i)
@@ -326,7 +330,7 @@ moneymaking, remunerative [1]", message)
             u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
         current_time = int(time.time())
         l1 = self.createLearnListItem("da_zbur",d1,today, current_time)
-        messages_generator = sendMessages(Twitter)
+        messages_generator = sendMessagesGenerator(Twitter, logging)
         m_list = []
         while True:
             try:
@@ -340,6 +344,7 @@ moneymaking, remunerative [1]", message)
         self.assertEqual(1.5, ll.efactor)
         self.assertEqual(2, ll.total_served)
         self.assertEqual(today + datetime.timedelta(days=2), ll.next_serve_date)
+        self.assertEqual(None, ll.next_serve_time)
 
         self.assertEqual(["@da_zbur lucrative[LOO-kruh-tiv]: profitable, \
 moneymaking, remunerative [1]"], m_list)
@@ -355,7 +360,7 @@ moneymaking, remunerative [1]"], m_list)
             u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
         current_time = int(time.time())
         l1 = self.createLearnListItem("da_zbur",d1,today, current_time)
-        messages_generator = sendMessages(Twitter)
+        messages_generator = sendMessagesGenerator(Twitter, logging)
         m_list = []
         while True:
             try:
@@ -368,6 +373,51 @@ moneymaking, remunerative [1]"], m_list)
         self.assertEqual(1, ll.total_served)
         self.assertEqual(today + datetime.timedelta(days=1), ll.next_serve_date)
         self.assertEqual([None], m_list)
+        self.assertEqual(None, ll.next_serve_time)
+
+    def testDetailsViewGetParameters(self):
+        today = datetime.date.today()
+        date2 = today + datetime.timedelta(days=5)
+        today_str = today.strftime("%B %d")
+        date2_str = date2.strftime("%B %d")
+
+        u = self.createUser("da_zbur","enabled",10)
+        d1 = self.createDictEntry("da_zbur",2,"lucrative",\
+            u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
+        d2 = self.createDictEntry("da_zbur",2,"amaranthine",\
+            u"неувядающий, вечный")
+
+        current_time = int(time.time())
+        l1 = self.createLearnListItem("da_zbur",d1, today, current_time)
+        l2 = self.createLearnListItem("da_zbur",d2, date2)
+        params = getParameters(u)
+
+        self.assertEqual(["lucrative [LOO-kruh-tiv]","profitable, moneymaking, remunerative",
+            today_str], params["dict_row"][0])
+        self.assertEqual(["amaranthine ",u"неувядающий, вечный",
+            date2_str], params["dict_row"][1])
+
+    def testCalculateAnswerRating(self):
+        original = 'profitable, moneymaking, remunerative'
+
+        # No match -- 0%
+        res = calculateAnswerRating(original, '-');
+        self.assertEqual(0, res)
+        # One good match -- 80%
+        res = calculateAnswerRating(original, 'moneymaking');
+        self.assertEqual(80, res)
+        # One partially good match < 80%
+        res = calculateAnswerRating(original, 'profetabl');
+        self.assertTrue(res < 80)
+        # Full match -- 100%
+        res = calculateAnswerRating(original, 'profitable,moneymaking,remunerative');
+        self.assertEqual(100, res)
+        # Full match with errors  80<= res <100
+        res = calculateAnswerRating(original, 'profitable,monemeking');
+        self.assertTrue(res <100 and res >= 80)
+
+        
+
 
 
         

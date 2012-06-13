@@ -16,6 +16,9 @@ from controllers.sendmessages import SendMessages
 from controllers.profile import Profile
 from controllers.admin import Admin
 from controllers.test import TestScreen
+from controllers.details import Details
+from controllers.learnlist import BuildDailyListScheduler
+from controllers.learnlist import SendMessagesScheduler
 
 # Initialize webb application. Assosiates index URL with MainPage class
 application = webapp.WSGIApplication(
@@ -24,13 +27,16 @@ application = webapp.WSGIApplication(
                                     ('/login', Login),
                                     ('/signout', Signout),
                                     ('/check_incoming',CheckIncoming),
-                                    ('/send_messages', SendMessages),
+                                    ('/send_messages', SendMessagesScheduler),
+                                    ('/build_daily_list', BuildDailyListScheduler),
                                     ('/profile', Profile),
+                                    ('/details', Details),
                                     ('/admin_model', Admin),
                                     ],
                                      debug=True)
 
 def main():
+    logging.getLogger().setLevel(logging.DEBUG)
     run_wsgi_app(application)
 	
 if __name__ == "__main__":

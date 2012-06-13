@@ -7,3 +7,6 @@ cron:
   url: /send_messages
   schedule: every 10 minutes
 
+- description: Build daily messages list
+  url: /build_daily_list
+  schedule: every 24 hours

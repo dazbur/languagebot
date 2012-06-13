@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <div class="container">
+      <div class="row">
+        <div class="span4 offset11"><h4>{{ username }}</h4></div>
+      </div>
+      <div class="row">
+        <div class="span12"><p></p></div>
+      </div>
+      <div class="row">
+        <div class="span12"><p></p></div>
+      </div>
+      <div class="row">
+        <div class="span12"><p></p></div>
+      </div>
+
+      <h1>Your dictionary</h1>
+      <table class="table">
+        <thread>
+          <th>Word</th>
+          <th>Meaning</th>
+          <th>Serve Date</th>
+        </thread>
+        <tbody>
+          <tr>
+          {% for i in dict_row %}
+             <td>{{ i.0 }}</td>
+             <td>{{ i.1 }}</td>
+             <td>{{ i.2 }}</td>
+          {% endfor %}
+          </tr>
+         </tbody>
+
+      </table>
+
+      
+    </div> <!-- /container -->
+{% endblock %}
+    
+
+    

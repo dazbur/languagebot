@@ -38,7 +38,7 @@ def parseMessage(message, botname):
         result["pronounce"] = ""
 
     words = message.split(':',1)
-    # If message is in valid definition:meaning1,meaning2... format
+    # If message is  valid definition:meaning1,meaning2... format
     if len(words) > 1:
         result["word"] = words[0].strip()
         result["meaning"] = words[1].strip()

@@ -1,47 +1,57 @@
 {% extends "base.html" %}
 
-{% block top %}
-<div id="signIn">
+<div class="container-fluid">
+  {% block content %}  
+
+
   {% if user_name %}
-    <A class="menulink" HREF="/signout">Log out</A>
-    <A class="menulink" HREF="/profile">Settings</A>
+    <div class="row">  
+      <div class="span1 offset10">
+        <A HREF="/signout"><h3>Log out</h3></A>
+      </div>
+      <div class="span1">
+        <A HREF="/profile"><h3>Settings</h3></A>
+      </div>
+    </div>
+    
   {% else %}
-    <A class="menulink" HREF="/login">Log in</A>
-    <A class="menulink" HREF="/register">Sign up</A>
+    <div class="row">  
+      <div class="span1 offset10">
+        <A HREF="/login"><h3>Log in</h3></A>
+      </div>
+      <div class="span1">
+        <A HREF="/register"><h3>Sign up</h3></A>
+      </div>
+    </div>
   {% endif %}
-</div> 
-{% endblock %}
-
-{% block content %}   
-    <p class="greeting">
-      {% if user_name %}
-        <div class="caption2" align="center">Welcome, {{ user_name}}!</div>
-      {% else %}
-        <div style="width = 250px;height = 250px;margin-left: 20%;
-        margin-right: 10%;margin-top:5%;">
-        <div class="caption2">How to use @LanguageBot?</div>
-
-        <div class="listitems" align="left">
-        
-        1. Become upset with your vocabulary<br>
-        2. Create an account at languagebot.me<br>
-        3. Encounter a new word and send a message to @LanguageBot:<br>
-        <div class="message">amaranthine [am-uh-RAN-thin]: неувядающий, вечный</div>
-        4. @LangugeBot will start sending
-        messages back to you with all the new words you've added in random
-        fashion.<br>
-        5. You can also follow your friends to see what words they are
-        learning.<br>
-        6. Learn new words and become Scrabble champion!
-        </div>
-        </div>
-
-
-
-
 
  
-      {% endif %}
-    </p>   
+  {% if user_name %}
+    <h1>Welcome, {{ user_name}}!</h1>
+  {% else %}
+
+    <div class="row">
+    <div class="span12">
+     <div class="hero-unit">
+      <h1>How to use @LanguageBot?</h1>
+        <ol>
+          <li><p>Become upset with your vocabulary</p></li>
+          <li><p>Create an account at languagebot.me</p></li>
+          <li><p>Encounter a new word and send a message to @LanguageBot:
+          amaranthine [am-uh-RAN-thin]: неувядающий, вечный</p></li>
+          <li><p>@LangugeBot will start sending
+          messages back to you with all the new words you've added in random
+          fashion.</p></li>
+          <li><p>You can also follow your friends to see what words they are
+          learning.</p></li>
+          <li><p>Learn new words and become Scrabble champion!</p></li>
+        </ol>
+    </div>
+     </div>
+     </div>
     
-{% endblock %}
+  {% endif %}
+  
+{% endblock %}    
+</div>
+
