@@ -3,18 +3,20 @@
 from google.appengine.ext import webapp
 from apiclient.discovery import build
 import re
+import datetime
 
 from twitter_auth import Twitter
 from models.dictionary import Dictionary
 from models.users import User
 from models.status import TwitterStatus
-from controllers.learnlist import LearnList, getNextInterval, addNewLearnListItem
+from models.questions import Question
+from controllers.learnlist import LearnList, getNextInterval,\
+     addNewLearnListItem, calculateAnswerRating, rescheduleLearnListItem
+from langbot_globals import *
 
 def parseMessage(message, botname):
     result = {}
     message = message.strip()
-
-
     # We need to make sure that @botname is at the begenning of the message. 
     # Message like "I love @LanguageBot :)" should be ignored
     # Also note that Twitter usernames are case insensitive 
@@ -44,8 +46,24 @@ def parseMessage(message, botname):
         result["meaning"] = words[1].strip()
     else:
         result = {}
-    
     return result
+
+def parseAnswer(message, botname):
+    # We need a different parsing for mesages that are answers
+    message = message.strip()
+    # We need to make sure that @botname is at the begenning of the message. 
+    # Message like "I love @LanguageBot :)" should be ignored
+    # Also note that Twitter usernames are case insensitive 
+    botname_re = re.compile("@"+botname, re.IGNORECASE)
+    s = botname_re.search(message)
+    if s:
+        if s.start() != 0:
+            return result
+
+    # Remove @botname from message text
+    message = botname_re.sub('', message)
+    return message
+
 
 def addNewDictEntry(twitter_user, message_id,  entry, served):
     dict_entry = Dictionary()
@@ -59,11 +77,32 @@ def addNewDictEntry(twitter_user, message_id,  entry, served):
     dict_entry.put()
     return dict_entry
 
+def checkForAnswer(user, message):
+    # Checking Questoins entity in case message we recieved is an answer
+    # To one of the questions
+    question = Question.all().\
+        filter("question_message_id =",message.in_reply_to_status_id).\
+        filter("answer_received =", None).get()
+    if not question:
+        return None
+    # Weird situation where user repied not to his question
+    if question.lli_ref.twitter_user != user.twitter:
+        return None
+    return question
+
 def processMessage(message):
+    today = datetime.date.today()
         
     # You can get addressee name by checking current
     # Twitter bot username, but this requires additional API call 
     twitter_user = message.user.screen_name
+     # Get User
+    user =  User.all().filter("twitter =", twitter_user).get()
+            
+    # Exit if user is not registred. This is to avoid spam
+    if not user:
+        return
+
 
     # Sometimes there are mentions that are not addressed to one user
     # like: "RT @user1 Check out @LanguageBot!" 
@@ -73,14 +112,30 @@ def processMessage(message):
         parsed_dict = parseMessage(message.text, message.in_reply_to_screen_name)
     else:
         return
-            
-    # Get User
-    user =  User.all().filter("twitter =", twitter_user).get()
-            
-    # Exit if user is not registred. This is to avoid spam
-    if not user:
-        return            
 
+    question = checkForAnswer(user, message)
+    # Check if message is an answer to a previously sent question
+    if question:
+        text = parseAnswer(message.text,message.in_reply_to_screen_name)
+        answer_rating = calculateAnswerRating(question.lli_ref.dict_entry.meaning, text)
+        question.answer_received = today
+        question.answer_rating = answer_rating
+        question.lli_ref.latest_answer_rating = answer_rating
+        question.put()
+        question.lli_ref.put()
+        # If answer_rating is very poor, we need to show correct answer right away
+        # else reschedule as normal accorsing to answer_rating
+        if answer_rating < ONEMATCHPERCENT - 10:
+            question.lli_ref.next_serve_time = 0
+            question.lli_ref.next_serve_date = today
+            question.put()
+            question.lli_ref.put()
+        else:
+            rescheduleLearnListItem(question.lli_ref, answer_rating)
+        return
+    
+
+    
     # If message is a valid dictionary entry -- save it to database
     if parsed_dict !={}:
     # Try and detect source language using Google Translate API

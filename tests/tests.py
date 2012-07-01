@@ -15,16 +15,19 @@ from twitter_mockup         import TwitterMockup
 
 from controllers.incoming   import parseMessage 
 from controllers.incoming   import processMessage
+from controllers.incoming   import checkForAnswer
 from controllers.learnlist  import getNextInterval
 from controllers.learnlist  import addNewLearnListItem
 from controllers.learnlist  import buildDailyList
 from controllers.learnlist  import prepareTwitterMessage
+from controllers.learnlist  import prepareQuestionMessage
 from controllers.learnlist  import sendMessagesGenerator
 from controllers.details    import getParameters
 from controllers.learnlist  import calculateAnswerRating
 from models.learnlist       import LearnList
 from models.dictionary      import Dictionary
 from models.users           import User
+from models.questions       import Question
 
 from twitter                import Status
 
@@ -176,7 +179,7 @@ class TestLearningList(unittest.TestCase):
         return learnListItem        
     
     def testGetNextInterval(self):
-        l = [0,0,1,1]
+        l = [60,55,90,87]
         n = 0
         res = []
         prev_interval = 0
@@ -416,7 +419,218 @@ moneymaking, remunerative [1]"], m_list)
         res = calculateAnswerRating(original, 'profitable,monemeking');
         self.assertTrue(res <100 and res >= 80)
 
+    def testQuestionAdding(self):
+        # This is testing buildDailyList method to make sure that
+        # every second serving a Question opbject is added. 
+        today = datetime.date.today()
+        u = self.createUser("da_zbur","enabled",10)
+        d1 = self.createDictEntry("da_zbur",2,"dog",u"собачка")
+        lli = self.createLearnListItem("da_zbur",d1,today)
+        u.use_questions = "yes"
+        u.put()
+        lli.total_served = 6 
+        lli.put()
+        buildDailyList(today, logging)
+        question_list = []
+        for q in Question.all().filter("lli_ref =", lli):
+            question_list.append(q)
+        self.assertEqual(1, len(question_list))
+        self.assertEqual(d1.key(), question_list[0].lli_ref.dict_entry.key())
+
+    def testPrepareQuestionMessage(self):
+        self.createUser("da_zbur","enabled",10)
+        # Test word with pronounciation
+        d1 = self.createDictEntry("da_zbur",2,"lucrative",\
+            u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
+        # Test word without pronounciation
+        d2 = self.createDictEntry("da_zbur",2,"ferociously(en)",\
+            u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.")
+        today = datetime.date.today()    
+        l1 = self.createLearnListItem("da_zbur",d1,today)
+        l2 = self.createLearnListItem("da_zbur",d2,today)
+        message = prepareQuestionMessage(l1)
+        message2 = prepareQuestionMessage(l2)
+
+        self.assertEqual("@da_zbur lucrative[LOO-kruh-tiv]:? [1]", message)
+        self.assertEqual(u"@da_zbur ferociously(en):? [1]", message2)
+
+    def testTwitterMockupStatusId(self):
+        Twitter = TwitterMockup()
+        status = Twitter.api.PostUpdate("This is a test message")
+        self.assertEqual(2042, status.id)
+
+    def testSendQuestion(self):
+        Twitter = TwitterMockup()
+        today = datetime.date.today()
+        current_time = int(time.time())
         
+        u = self.createUser("da_zbur","enabled",10)
+        u.use_questions = "yes"
+        u.put()
+
+        d1 = self.createDictEntry("da_zbur",2,"lucrative",\
+            u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
+        d2 = self.createDictEntry("da_zbur",2,"ferociously(en)",\
+            u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.")
+
+        l1 = self.createLearnListItem("da_zbur",d1,today,current_time)
+        l2 = self.createLearnListItem("da_zbur",d2,today,current_time)        
+        
+        # forcing question to be asked        
+        l1.total_served = 4
+        l1.put()
+       
+        buildDailyList(today, logging)
+        # Keep in mind building daily list means serve times will be 
+        # randomly distributed throighout the day!
+        l1.next_serve_time = current_time
+        l2.next_serve_time = current_time
+        l2.put()
+        l1.put()
+
+        messages_generator = sendMessagesGenerator(Twitter, logging)
+        m_list = []
+        while True:
+            try:
+                message = messages_generator.next()
+            except StopIteration:
+                break
+            m_list.append(message)
+        # Testing that proper Question entity was created
+        q = Question.all().fetch(1)[0]
+        self.assertEqual(3492, q.question_message_id)
+        self.assertEqual(today, q.question_sent)
+        self.assertEqual(4, l1.total_served)
+        self.assertEqual(None, q.lli_ref.next_serve_time)
+        self.assertEqual("@da_zbur lucrative[LOO-kruh-tiv]:? [4]", m_list[0])
+
+    def testCheckForAnswer(self):
+        # I should collapse this code into something reusable
+        Twitter = TwitterMockup()
+        today = datetime.date.today()
+        current_time = int(time.time())
+        
+        u = self.createUser("da_zbur","enabled",10)
+        u.use_questions = "yes"
+        u.put()
+
+        d1 = self.createDictEntry("da_zbur",2,"lucrative",\
+            u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
+        
+        l1 = self.createLearnListItem("da_zbur",d1,today,current_time)
+        
+        # forcing question to be asked        
+        l1.total_served = 4
+        l1.put()
+       
+        buildDailyList(today, logging)
+        # Keep in mind building daily list means serve times will be 
+        # randomly distributed throighout the day!
+        l1.next_serve_time = current_time
+        l1.put()
+
+        messages_generator = sendMessagesGenerator(Twitter, logging)
+        m_list = []
+        while True:
+            try:
+                message = messages_generator.next()
+            except StopIteration:
+                break
+            m_list.append(message)
+
+        q = Question.all().fetch(1)[0]
+
+        # Question for word d1 was genereated and sent
+        # Now user prepares an answer
+        answer = "@LanguageBot moneymaking, profitable"
+        m = Twitter.api.PostUpdate(answer, in_reply_to_s_id=q.question_message_id)
+        q2 = checkForAnswer(u, m)
+        self.assertEqual(q.key(), q2.key())
+
+    def testAnswersIntegration(self):
+        # I should collapse this code into something reusable
+
+        # This is a big integration test for question/answers
+        # Idea is that there are two answers: good and bad
+        # Need to check if messages are being properly rescheduled and send
+
+        Twitter = TwitterMockup()
+        today = datetime.date.today()
+        current_time = int(time.time())
+        
+        u = self.createUser("da_zbur","enabled",10)
+        u.use_questions = "yes"
+        u.put()
+
+        d1 = self.createDictEntry("da_zbur",2,"lucrative",\
+            u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
+        d2 = self.createDictEntry("da_zbur",2,"ferociously(en)",\
+            u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.")
+
+        l1 = self.createLearnListItem("da_zbur",d1,today,current_time)
+        l2 = self.createLearnListItem("da_zbur",d2,today,current_time)        
+        
+        # forcing question to be asked        
+        l1.total_served = 4
+        l2.total_served = 6
+        l1.interval_days = 3.2
+        l1.efactor = 1.3
+        l2.interval_days = 7.4
+        l2.efactor = 0.98
+        l1.put()
+        l2.put()
+       
+        buildDailyList(today, logging)
+        # Keep in mind building daily list means serve times will be 
+        # randomly distributed throighout the day!
+        l1.next_serve_time = current_time
+        l2.next_serve_time = current_time
+        l2.put()
+        l1.put()
+
+        messages_generator = sendMessagesGenerator(Twitter, logging)
+        m_list = []
+        while True:
+            try:
+                message = messages_generator.next()
+            except StopIteration:
+                break
+            m_list.append(message)
+
+        q1 = Question.all().fetch(2)[0]
+        q2 = Question.all().fetch(2)[1]
+
+        # This is a good answer
+        a1 = "@LanguageBot moneymaking, profitable"
+        # This is crappy answer
+        a2 = u"@LanguageBot ---"
+        m1 = Twitter.api.PostUpdate(a1, in_reply_to_s_id=q1.question_message_id,\
+            user_screen_name="da_zbur",in_reply_to_screen_name="LanguageBot")
+        m2 = Twitter.api.PostUpdate(a2, in_reply_to_s_id=q2.question_message_id,\
+            user_screen_name="da_zbur",in_reply_to_screen_name="LanguageBot")
+        processMessage(m1)
+        processMessage(m2)
+
+        q1 = Question.all().fetch(2)[0]
+        q2 = Question.all().fetch(2)[1]
+        
+        # For good question
+        self.assertEqual(today, q1.answer_received)
+        self.assertEqual(90, q1.answer_rating)
+        self.assertEqual(90, q1.lli_ref.latest_answer_rating)
+        self.assertEqual(None, q1.lli_ref.next_serve_time)
+        self.assertEqual(1.4, q1.lli_ref.efactor)
+        self.assertEqual(3.2*1.3, q1.lli_ref.interval_days)
+
+        # For bad question
+        self.assertEqual(today, q2.answer_received)
+        self.assertEqual(0, q2.answer_rating)
+        self.assertEqual(0, q2.lli_ref.latest_answer_rating)
+        self.assertEqual(0, q2.lli_ref.next_serve_time)
+        self.assertEqual(today, q2.lli_ref.next_serve_date)
+        
+        
+
 
 
 

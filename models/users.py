@@ -16,3 +16,4 @@ class User(db.Model):
     messages_per_day    = db.IntegerProperty() 
     default_source_lang = db.StringProperty()
     follow_lang_list    = db.StringProperty()
+    use_questions       = db.StringProperty()

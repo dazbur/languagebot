@@ -1,25 +1,22 @@
 from google.appengine.ext import webapp
 
-from twitter import TwitterError
-from twitter_auth import Twitter
-
-from models.learnlist import LearnList
-from models.users import User
-
 import datetime
 import random
 import time
 import logging
 import difflib
 
+from twitter import TwitterError
+from twitter_auth import Twitter
+
+from models.learnlist import LearnList
+from models.users import User
+from models.questions import Question
+from langbot_globals import *
+
+
 random.seed()
 
-MININTERVAL = 1 # Minimal interval between messages in hours
-SCHEDULERUN = 600 # Message sender is scheduled to run every SCHEDULERUN seconds 
-
-MAXRATINGLIMIT = 0.9
-MINRATINGLIMIT = 0.8
-ONEMATCHPERCENT = 80
 
 
 def addDays(date, days):
@@ -44,7 +41,7 @@ def calculateAnswerRating(original, answer):
                 r_max = r
         rating_list.append(r_max)
     
-    # The logic is the following. Answer with max tating which greater than MAXRATINGLIMIT 
+    # The logic is the following. Answer with max rating which greater than MAXRATINGLIMIT 
     # will give you ONEMATCHPERCENT result. At MINRATINGLIMIT this will 
     # be ONEMATCHPERCENT - 10. You can get (100 - ONEMATCHPERCENT)/(words_count-1) 
     # for rest of the words
@@ -67,26 +64,32 @@ def calculateAnswerRating(original, answer):
 
     return result
 
-
-# It would be easier to just use this approach for now:
-# if answer_rating=0 (no answer at all or completely incorrect answer) 
-# then ef'= -0.2
-# if answer_rating=1 (correct answer for at least one meaning) then ef' = 0.1
-# for each additional correct meaning add 0.05 to ef'
-# Starting EF = 1.5
+# andwer_rating is a %. If it is greater than ONEMATCHPERCENT-10, than
+# we increase EF by 0.1
 def getNextInterval(n,prev_interval,prev_efactor,answer_rating):
     if n == 1:
         return  {'new_interval':2.0, 'new_efactor':1.5}
 
     new_interval = prev_interval * prev_efactor
     new_efactor = prev_efactor
-    if answer_rating == 0:
+    if answer_rating < ONEMATCHPERCENT - 10:
         new_efactor = prev_efactor - 0.2
-    if answer_rating == 1:
+    if answer_rating >= ONEMATCHPERCENT - 10 :
         new_efactor = prev_efactor + 0.1
-
     return {'new_interval':round(new_interval,2),\
         'new_efactor':round(new_efactor,2)}
+
+def rescheduleLearnListItem(lli, answer_rating):
+    next_interval = getNextInterval(lli.total_served,\
+        lli.interval_days, lli.efactor, answer_rating)
+    lli.interval_days = next_interval["new_interval"]
+    lli.efactor = next_interval["new_efactor"]
+    lli.next_serve_date = addDays(lli.next_serve_date,\
+        int(lli.interval_days))
+    lli.total_served = lli.total_served + 1
+    lli.next_serve_time = None 
+    lli.put()
+    
 
 def addNewLearnListItem(twitter_user, dict_entry):
     l = LearnList()
@@ -111,12 +114,25 @@ def prepareTwitterMessage(learnListItem):
      + pronounce + ": " + learnListItem.dict_entry.meaning + count
     return message
 
+def prepareQuestionMessage(learnListItem):
+    served = learnListItem.total_served 
+    if learnListItem.dict_entry.pronounce:
+        pronounce = learnListItem.dict_entry.pronounce
+    else:
+        pronounce = ""
+    count = " [%s]" % served
+    message = "@" + learnListItem.twitter_user + " " + learnListItem.dict_entry.word\
+     + pronounce + ":?" + count
+    return message
+
+
 def buildDailyList(day, logging):
     logging.debug("Entered Build Daily List") 
     current_timestamp = int(time.time())
     for user in User.all().filter("account_status =","enabled"):
         llQuery = LearnList.all().filter("twitter_user =",\
                 user.twitter).filter("next_serve_date =",day)
+        use_questions = user.use_questions
         i = 0
         message_list = []
         for learnListItem in llQuery.run():
@@ -135,7 +151,13 @@ def buildDailyList(day, logging):
         for l in  message_list:
             try:
                 s = interval_gen.next()
-                l.next_serve_time = current_timestamp + s 
+                l.next_serve_time = current_timestamp + s
+                # Create new question entry for every second serve
+                # If user has this option enabled
+                if use_questions == "yes" and (l.total_served % 2 == 0):
+                    q = Question()
+                    q.lli_ref = l
+                    q.put()
                 l.put()
             except StopIteration:
                 pass
@@ -145,6 +167,7 @@ def sendMessagesGenerator(TwitterAPI, logging):
     current_time = int(time.time())
     # Are there messages to send out in next SCHEDULERUN seconds?
     next_planned_interval = current_time + SCHEDULERUN
+    today = datetime.date.today()
 
     for lli in LearnList.all().\
         filter("next_serve_time <=", next_planned_interval):
@@ -161,22 +184,40 @@ def sendMessagesGenerator(TwitterAPI, logging):
             lli.next_serve_time = None
             lli.put()
             continue
-        
-        message = prepareTwitterMessage(lli)
+   
+        # If there is a question to send, prepare a different
+        # Twitter message format
+        question = Question.all().filter("lli_ref =", lli).\
+            filter("answer_received =",None).fetch(1)
+       
+        if question != []:           
+            message = prepareQuestionMessage(lli)
+        else:
+            message = prepareTwitterMessage(lli)
 
-        
         try:
-            TwitterAPI.api.PostUpdate(message)
+            status = TwitterAPI.api.PostUpdate(message)
             result = message
-            next_interval = getNextInterval(lli.total_served,\
-             lli.interval_days, lli.efactor, 1)
-            lli.interval_days = next_interval["new_interval"]
-            lli.efactor = next_interval["new_efactor"]
-            lli.next_serve_date = addDays(lli.next_serve_date,\
-             int(lli.interval_days))
-            lli.total_served = lli.total_served + 1
-            lli.next_serve_time = None 
-            lli.put()
+            # For questions we do no recalculate new interval right away
+            # We do it when answer is recieved or no received
+            # Instead we update Question entity
+            if question == []:
+                if lli.latest_answer_rating:
+                    answer_rating = lli.latest_answer_rating
+                else:
+                    answer_rating = 100
+
+                rescheduleLearnListItem(lli, answer_rating)                
+            else:
+                question[0].question_sent = today
+                question[0].question_message_id = status.id
+                question[0].put() 
+                # We also need to make sure this message is not sent again automatically
+                # Until answer is recieved or it expires
+                lli.next_serve_time = None 
+                lli.put()
+
+
         except TwitterError:
             logging.error("Twitter error when sending message %s" % message)
         yield result
