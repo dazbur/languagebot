@@ -11,4 +11,4 @@ api = twitter.Api(consumer_key='8hUziMDlvgoMLOPskIrIA',
                 debugHTTP=True)
 
 replies = api.GetReplies()
-print [x.text for x in replies]
+print [x.in_reply_to_status_id for x in replies]
