@@ -17,3 +17,5 @@ class User(db.Model):
     default_source_lang = db.StringProperty()
     follow_lang_list    = db.StringProperty()
     use_questions       = db.StringProperty()
+    use_daily_email     = db.StringProperty()
+    

@@ -7,7 +7,8 @@ from current_session import current_user
 from request_model_binder import model_from_request
 from models.users import User
 from models.learnlist import LearnList
-
+from controllers.incoming import parseMessage
+from controllers.incoming import addNewWord
 
 def getParameters(user):
     parameters = {}
@@ -37,3 +38,13 @@ class Details(webapp.RequestHandler):
         user = current_user()
         parameters = getParameters(user)
         self.view(parameters)
+
+    def post(self):
+        user = current_user()
+        text = self.request.get("new_word")
+        message_dict = parseMessage(text, '')
+        addNewWord(message_dict, user, None)
+        self.redirect("/details")
+
+
+

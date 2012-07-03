@@ -8,7 +8,7 @@ class Admin(webapp.RequestHandler):
     
     def get(self):
         for user in User.all():
-            user.default_source_lang = 'en'
+            user.use_daily_email = "yes"
             user.put()
  
 

@@ -1,0 +1,5 @@
+indexes:
+- kind: LearnList
+  properties:
+  - name: twitter_user
+  - name: next_serve_date

@@ -90,6 +90,27 @@ def checkForAnswer(user, message):
         return None
     return question
 
+def addNewWord(parsed_dict, user, message_id):
+    
+    if parsed_dict !={}:
+    # Try and detect source language using Google Translate API
+        try:
+            service = build('translate', 'v2',\
+                developerKey='AIzaSyAHrpwDJrmFiZOcQhNE6ZgIPY8dxqGsdz8')
+            detection = service.detections().list(q=[parsed_dict["word"]]).execute()
+        except:
+            detection = {}
+
+        if detection == {} or detection["detections"][0][0]["confidence"] <0.00001:
+            source_lang = user.default_source_lang
+        else:
+            source_lang = detection["detections"][0][0]["language"]
+
+        parsed_dict["source_lang"] = source_lang
+
+        new_dict_entry = addNewDictEntry(user.twitter, message_id, parsed_dict, 0)
+        addNewLearnListItem (user.twitter, new_dict_entry)
+
 def processMessage(message):
     today = datetime.date.today()
         
@@ -134,28 +155,8 @@ def processMessage(message):
             rescheduleLearnListItem(question.lli_ref, answer_rating)
         return
     
-
-    
     # If message is a valid dictionary entry -- save it to database
-    if parsed_dict !={}:
-    # Try and detect source language using Google Translate API
-        try:
-            service = build('translate', 'v2',\
-                developerKey='AIzaSyAHrpwDJrmFiZOcQhNE6ZgIPY8dxqGsdz8')
-            detection = service.detections().list(q=[parsed_dict["word"]]).execute()
-        except:
-            detection = {}
-
-        if detection == {} or detection["detections"][0][0]["confidence"] <0.00001:
-            source_lang = user.default_source_lang
-        else:
-            source_lang = detection["detections"][0][0]["language"]
-
-        parsed_dict["source_lang"] = source_lang
-
-        new_dict_entry = addNewDictEntry(twitter_user, message.id, parsed_dict, 0)
-        addNewLearnListItem (twitter_user, new_dict_entry)
-
+    addNewWord(parsed_dict, user, message.id)
 
 class CheckIncoming(webapp.RequestHandler):
     

@@ -9,4 +9,8 @@ cron:
 
 - description: Build daily messages list
   url: /build_daily_list
-  schedule: every 24 hours
+  schedule: every day 00:00
+
+- description: Send daily email
+  url: /send_daily_mail
+  schedule: every day 02:00

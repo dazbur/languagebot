@@ -7,6 +7,7 @@ appcfg.fix_sys_path()
 import unittest
 import datetime
 import time
+import sys
 from google.appengine.ext   import webapp
 from google.appengine.ext   import db
 from google.appengine.ext   import testbed
@@ -24,6 +25,7 @@ from controllers.learnlist  import prepareQuestionMessage
 from controllers.learnlist  import sendMessagesGenerator
 from controllers.details    import getParameters
 from controllers.learnlist  import calculateAnswerRating
+from controllers.learnlist  import prepareEmailMessagesGenerator
 from models.learnlist       import LearnList
 from models.dictionary      import Dictionary
 from models.users           import User
@@ -191,10 +193,10 @@ class TestLearningList(unittest.TestCase):
             res.append(r)
             prev_interval = r["new_interval"]
             prev_efactor = r["new_efactor"]
-        self.assertEqual(res, [{'new_interval': 2, 'new_efactor': 1.5},\
-            {'new_interval': 3.0, 'new_efactor': 1.3},\
-            {'new_interval': 3.9, 'new_efactor':1.4},\
-            {'new_interval':5.46, 'new_efactor':1.5}])
+        self.assertEqual(res, [{'new_interval': 1.5, 'new_efactor': 1.5},\
+            {'new_interval': 2.25, 'new_efactor': 1.3},\
+            {'new_interval': 2.93, 'new_efactor':1.4},\
+            {'new_interval':4.1, 'new_efactor':1.5}])
 
     def testAddNewLearnListItem(self):
         # Preparing datastore by prepopulating some data
@@ -210,11 +212,11 @@ class TestLearningList(unittest.TestCase):
         results = query.fetch(2)
         self.assertEqual(1, len(results))
         self.assertEqual('ny_blin', results[0].twitter_user)
-        self.assertEqual(2, results[0].interval_days)
+        self.assertEqual(1.5, results[0].interval_days)
         self.assertEqual(1.5, results[0].efactor)
         self.assertEqual(1, results[0].total_served)
         now_plus_two = datetime.date.today() +\
-            datetime.timedelta(days=2)
+            datetime.timedelta(days=1)
         self.assertEqual(now_plus_two, results[0].next_serve_date)      
 
     def testBuildDailyList(self):
@@ -343,11 +345,11 @@ moneymaking, remunerative [1]", message)
             m_list.append(message)
         # Testing that LearnListItem was rescheduled properly
         ll = LearnList.all().fetch(1)[0]
-        self.assertEqual(2, ll.interval_days)
+        self.assertEqual(1.5, ll.interval_days)
         self.assertEqual(1.5, ll.efactor)
         self.assertEqual(2, ll.total_served)
-        self.assertEqual(today + datetime.timedelta(days=2), ll.next_serve_date)
-        self.assertEqual(None, ll.next_serve_time)
+        self.assertEqual(today + datetime.timedelta(days=1), ll.next_serve_date)
+        self.assertEqual(sys.maxint, ll.next_serve_time)
 
         self.assertEqual(["@da_zbur lucrative[LOO-kruh-tiv]: profitable, \
 moneymaking, remunerative [1]"], m_list)
@@ -376,7 +378,7 @@ moneymaking, remunerative [1]"], m_list)
         self.assertEqual(1, ll.total_served)
         self.assertEqual(today + datetime.timedelta(days=1), ll.next_serve_date)
         self.assertEqual([None], m_list)
-        self.assertEqual(None, ll.next_serve_time)
+        self.assertEqual(sys.maxint, ll.next_serve_time)
 
     def testDetailsViewGetParameters(self):
         today = datetime.date.today()
@@ -501,7 +503,7 @@ moneymaking, remunerative [1]"], m_list)
         self.assertEqual(3492, q.question_message_id)
         self.assertEqual(today, q.question_sent)
         self.assertEqual(4, l1.total_served)
-        self.assertEqual(None, q.lli_ref.next_serve_time)
+        self.assertEqual(sys.maxint, q.lli_ref.next_serve_time)
         self.assertEqual("@da_zbur lucrative[LOO-kruh-tiv]:? [4]", m_list[0])
 
     def testCheckForAnswer(self):
@@ -618,7 +620,7 @@ moneymaking, remunerative [1]"], m_list)
         self.assertEqual(today, q1.answer_received)
         self.assertEqual(90, q1.answer_rating)
         self.assertEqual(90, q1.lli_ref.latest_answer_rating)
-        self.assertEqual(None, q1.lli_ref.next_serve_time)
+        self.assertEqual(sys.maxint, q1.lli_ref.next_serve_time)
         self.assertEqual(1.4, q1.lli_ref.efactor)
         self.assertEqual(3.2*1.3, q1.lli_ref.interval_days)
 
@@ -629,11 +631,33 @@ moneymaking, remunerative [1]"], m_list)
         self.assertEqual(0, q2.lli_ref.next_serve_time)
         self.assertEqual(today, q2.lli_ref.next_serve_date)
         
-        
+    def testPerpareEmailMesaage(self):
+        today = datetime.date.today()
+        current_time = int(time.time())
+        u = self.createUser("da_zbur","enabled",10)
+        u.use_questions = "yes"
+        u.use_daily_email = "yes"
+        u.email = "zburivsky@gmail.com"
+        u.put()
 
+        d1 = self.createDictEntry("da_zbur",2,"lucrative",\
+            u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
+        d2 = self.createDictEntry("da_zbur",2,"ferociously(en)",\
+            u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.")
 
+        g = prepareEmailMessagesGenerator()
 
-
+        l1 = self.createLearnListItem("da_zbur",d1,today,current_time)
+        l2 = self.createLearnListItem("da_zbur",d2,today,current_time)
+        while True:
+            try:
+                message = g.next()
+                
+            except StopIteration:
+                break
+        f = open("files/email1.html","r")
+        email = f.read()
+        self.assertEqual({"email":"zburivsky@gmail.com", "message":email}, message)
         
 
         

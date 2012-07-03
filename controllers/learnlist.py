@@ -1,10 +1,14 @@
 from google.appengine.ext import webapp
+from google.appengine.ext.webapp import template
+from google.appengine.api import mail
 
 import datetime
 import random
 import time
 import logging
 import difflib
+import sys
+import os
 
 from twitter import TwitterError
 from twitter_auth import Twitter
@@ -54,12 +58,19 @@ def calculateAnswerRating(original, answer):
     words_count = len(original_list)
     r_max = max(rating_list)
 
-    if r_max >= MAXRATINGLIMIT:
-        result = ONEMATCHPERCENT
+    if words_count == 1:
+        ONEMATCHPERCENT_local = 100
     else:
-        result = ONEMATCHPERCENT - (r_max - MINRATINGLIMIT) / 0.01
+        ONEMATCHPERCENT_local = ONEMATCHPERCENT
 
-    result = result + ((100 - ONEMATCHPERCENT)/(words_count -1)) * (len(rating_list)-1)
+    if r_max >= MAXRATINGLIMIT:
+        result = ONEMATCHPERCENT_local
+    else:
+        result = ONEMATCHPERCENT_local - (r_max - MINRATINGLIMIT) / 0.01
+
+    if words_count > 1:
+        result = result + ((100 - ONEMATCHPERCENT_local)/(words_count -1))\
+         * (len(rating_list)-1)
     
 
     return result
@@ -68,7 +79,7 @@ def calculateAnswerRating(original, answer):
 # we increase EF by 0.1
 def getNextInterval(n,prev_interval,prev_efactor,answer_rating):
     if n == 1:
-        return  {'new_interval':2.0, 'new_efactor':1.5}
+        return  {'new_interval':1.5, 'new_efactor':1.5}
 
     new_interval = prev_interval * prev_efactor
     new_efactor = prev_efactor
@@ -87,7 +98,7 @@ def rescheduleLearnListItem(lli, answer_rating):
     lli.next_serve_date = addDays(lli.next_serve_date,\
         int(lli.interval_days))
     lli.total_served = lli.total_served + 1
-    lli.next_serve_time = None 
+    lli.next_serve_time = sys.maxint
     lli.put()
     
 
@@ -100,6 +111,7 @@ def addNewLearnListItem(twitter_user, dict_entry):
     l.interval_days = i['new_interval']
     l.next_serve_date = addDays(now, int(l.interval_days)) 
     l.efactor = i['new_efactor']
+    l.next_serve_time = sys.maxint
     l.total_served = 1
     l.put()
 
@@ -162,6 +174,33 @@ def buildDailyList(day, logging):
             except StopIteration:
                 pass
 
+def prepareEmailMessagesGenerator():
+    # This must be run after buildDailyList
+    # Since only there a daily message limit is applied
+    # though, this limit can be different for emails
+    path_current =os.path.dirname(__file__)
+    root_path = os.path.split(path_current)[0]
+    view_path = root_path + "/views/daily_email.html"
+  
+    today = datetime.date.today()
+    emails_dict = {}
+    for user in User.all().filter("account_status =","enabled").\
+        filter("use_daily_email =","yes"):
+
+        parameters = {}
+        parameters["dict_row"] = []
+        for lli in LearnList.all().\
+            filter("next_serve_date =",today).\
+            filter("twitter_user =",user.twitter):
+            l = []
+            l.append(lli.dict_entry.word+" "+lli.dict_entry.pronounce)
+            l.append(lli.dict_entry.meaning)
+            parameters["dict_row"].append(l)
+        emails_dict["email"] = user.email
+        emails_dict["message"] = template.\
+            render(view_path,parameters)
+        yield emails_dict
+        
 
 def sendMessagesGenerator(TwitterAPI, logging):
     current_time = int(time.time())
@@ -181,7 +220,7 @@ def sendMessagesGenerator(TwitterAPI, logging):
             # If user has messages in todays list but is disabled now
             # Let's just reschedule it to tomorrow
             lli.next_serve_date = addDays(lli.next_serve_date, 1)
-            lli.next_serve_time = None
+            lli.next_serve_time = sys.maxint
             lli.put()
             continue
    
@@ -202,7 +241,7 @@ def sendMessagesGenerator(TwitterAPI, logging):
             # We do it when answer is recieved or no received
             # Instead we update Question entity
             if question == []:
-                if lli.latest_answer_rating:
+                if lli.latest_answer_rating >= 0:
                     answer_rating = lli.latest_answer_rating
                 else:
                     answer_rating = 100
@@ -214,7 +253,7 @@ def sendMessagesGenerator(TwitterAPI, logging):
                 question[0].put() 
                 # We also need to make sure this message is not sent again automatically
                 # Until answer is recieved or it expires
-                lli.next_serve_time = None 
+                lli.next_serve_time = sys.maxint 
                 lli.put()
 
 
@@ -263,6 +302,21 @@ class SendMessagesScheduler(webapp.RequestHandler):
             except StopIteration:
                 break
 
+class SendDailyMail(webapp.RequestHandler):    
+           
+    def get(self):
+        g = prepareEmailMessagesGenerator()
+        while True:
+            try:
+                emails_dict = g.next()
+                message = mail.EmailMessage(sender="zburivsky@gmail.com",
+                            subject="Language Bot Daily Mail")
+
+                message.to = emails_dict["email"]
+                message.html = emails_dict["message"]
+                message.send()                
+            except StopIteration:
+                break
         
      
 	

@@ -19,6 +19,8 @@ from controllers.test import TestScreen
 from controllers.details import Details
 from controllers.learnlist import BuildDailyListScheduler
 from controllers.learnlist import SendMessagesScheduler
+from controllers.learnlist import SendDailyMail
+
 
 # Initialize webb application. Assosiates index URL with MainPage class
 application = webapp.WSGIApplication(
@@ -29,6 +31,7 @@ application = webapp.WSGIApplication(
                                     ('/check_incoming',CheckIncoming),
                                     ('/send_messages', SendMessagesScheduler),
                                     ('/build_daily_list', BuildDailyListScheduler),
+                                    ('/send_daily_mail', SendDailyMail),
                                     ('/profile', Profile),
                                     ('/details', Details),
                                     ('/admin_model', Admin),
