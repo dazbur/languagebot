@@ -134,7 +134,11 @@ def processMessage(message):
     else:
         return
 
-    question = checkForAnswer(user, message)
+    if message.in_reply_to_status_id != None:
+        question = checkForAnswer(user, message)
+    else:
+        question = None
+
     # Check if message is an answer to a previously sent question
     if question:
         text = parseAnswer(message.text,message.in_reply_to_screen_name)

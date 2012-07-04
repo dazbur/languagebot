@@ -137,6 +137,19 @@ def prepareQuestionMessage(learnListItem):
      + pronounce + ":?" + count
     return message
 
+def acknowledgeQuestions(day):
+    # This is used to acknowledge any unaswered question
+    # It sets answer rating to 0 and reschedules to today
+    for question in Question.all().filter("answer_received =", None).\
+            filter("question_message_id !=", None):
+        question.answer_received = day
+        question.answer_rating = 0
+        question.lli_ref.latest_answer_rating = 0
+        question.lli_ref.next_serve_time = 0
+        question.lli_ref.next_serve_date = day
+        question.put()
+        question.lli_ref.put()
+        
 
 def buildDailyList(day, logging):
     logging.debug("Entered Build Daily List") 
@@ -282,7 +295,10 @@ class BuildDailyListScheduler(webapp.RequestHandler):
     
            
     def get(self):
-        today = datetime.date.today() #+ datetime.timedelta(days=2) #TEST!!! 
+        today = datetime.date.today() 
+        # Before we build a daily list let's acknowledge any unaswered questions
+        # From previous day
+        acknowledgeQuestions(today)
         buildDailyList(today, logging)
 
 

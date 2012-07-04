@@ -26,6 +26,7 @@ from controllers.learnlist  import sendMessagesGenerator
 from controllers.details    import getParameters
 from controllers.learnlist  import calculateAnswerRating
 from controllers.learnlist  import prepareEmailMessagesGenerator
+from controllers.learnlist  import acknowledgeQuestions
 from models.learnlist       import LearnList
 from models.dictionary      import Dictionary
 from models.users           import User
@@ -658,6 +659,53 @@ moneymaking, remunerative [1]"], m_list)
         f = open("files/email1.html","r")
         email = f.read()
         self.assertEqual({"email":"zburivsky@gmail.com", "message":email}, message)
+
+    def testQuestionAcknowledge(self):
+        Twitter = TwitterMockup()
+        today = datetime.date.today()
+        current_time = int(time.time())
+        
+        u = self.createUser("da_zbur","enabled",10)
+        u.use_questions = "yes"
+        u.put()
+
+        d1 = self.createDictEntry("da_zbur",2,"lucrative",\
+            u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
+        d2 = self.createDictEntry("da_zbur",2,"ferociously(en)",\
+            u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.")
+
+        l1 = self.createLearnListItem("da_zbur",d1,today,current_time)
+        l2 = self.createLearnListItem("da_zbur",d2,today,current_time)        
+        
+        # forcing question to be asked        
+        l1.total_served = 4
+        l2.total_served = 6
+        l2.put()
+        l1.put()
+       
+        buildDailyList(today, logging)
+        # Keep in mind building daily list means serve times will be 
+        # randomly distributed throighout the day!
+        l1.next_serve_time = current_time
+        l2.next_serve_time = current_time
+        l2.put()
+        l1.put()
+
+        messages_generator = sendMessagesGenerator(Twitter, logging)
+        m_list = []
+        while True:
+            try:
+                message = messages_generator.next()
+            except StopIteration:
+                break
+            m_list.append(message)
+
+        # Now imagine those question didn't get answers before next daily
+        # list is build
+        acknowledgeQuestions(today)
+
+        unack_count = Question.all().filter("answer_received =", None).count()
+        self.assertEqual(0, unack_count) 
         
 
         
