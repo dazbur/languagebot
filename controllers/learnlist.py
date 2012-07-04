@@ -73,7 +73,7 @@ def calculateAnswerRating(original, answer):
          * (len(rating_list)-1)
     
 
-    return result
+    return int(result)
 
 # andwer_rating is a %. If it is greater than ONEMATCHPERCENT-10, than
 # we increase EF by 0.1
