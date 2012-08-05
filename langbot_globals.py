@@ -1,4 +1,8 @@
-MININTERVAL = 1 # Minimal interval between messages in hours
+MININTERVAL = 0.5 # Minimal interval between messages in hours
+
+# Assuming BuildDailyList runs as midnight UTC, 
+# first message to be sent to user not earlier than 8 AM - timzone offset
+FIRSTMESSAGEHOUR = 8 
 SCHEDULERUN = 600 # Message sender is scheduled to run every SCHEDULERUN seconds 
 
 MAXRATINGLIMIT = 0.9

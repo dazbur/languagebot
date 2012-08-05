@@ -3,3 +3,8 @@ indexes:
   properties:
   - name: twitter_user
   - name: next_serve_date
+
+- kind: Question
+  properties:
+  - name: answer_received
+  - name: question_message_id

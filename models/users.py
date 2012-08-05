@@ -5,7 +5,7 @@ class User(db.Model):
     username            = db.StringProperty()
     twitter             = db.StringProperty()
     password            = db.StringProperty()
-    timezone            = db.StringProperty()
+    utc_offset          = db.IntegerProperty()
     email               = db.StringProperty()
     next_run_time       = db.IntegerProperty()
     message_type        = db.StringProperty()

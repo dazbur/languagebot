@@ -194,10 +194,10 @@ class TestLearningList(unittest.TestCase):
             res.append(r)
             prev_interval = r["new_interval"]
             prev_efactor = r["new_efactor"]
-        self.assertEqual(res, [{'new_interval': 1.5, 'new_efactor': 1.5},\
-            {'new_interval': 2.25, 'new_efactor': 1.3},\
-            {'new_interval': 2.93, 'new_efactor':1.4},\
-            {'new_interval':4.1, 'new_efactor':1.5}])
+        self.assertEqual(res, [{'new_interval': 2.5, 'new_efactor': 1.5},\
+            {'new_interval': 3.75, 'new_efactor': 1.3},\
+            {'new_interval': 4.88, 'new_efactor':1.6},\
+            {'new_interval':7.81, 'new_efactor':1.9}])
 
     def testAddNewLearnListItem(self):
         # Preparing datastore by prepopulating some data
@@ -213,18 +213,22 @@ class TestLearningList(unittest.TestCase):
         results = query.fetch(2)
         self.assertEqual(1, len(results))
         self.assertEqual('ny_blin', results[0].twitter_user)
-        self.assertEqual(1.5, results[0].interval_days)
+        self.assertEqual(2.5, results[0].interval_days)
         self.assertEqual(1.5, results[0].efactor)
         self.assertEqual(1, results[0].total_served)
         now_plus_two = datetime.date.today() +\
-            datetime.timedelta(days=1)
+            datetime.timedelta(days=2)
         self.assertEqual(now_plus_two, results[0].next_serve_date)      
 
     def testBuildDailyList(self):
         # Prepare 4 users: 3 active one disabled, one with 
         # limit of messages per day
         self.createUser("ny_blin","enabled",10)
-        self.createUser("da_zbur","enabled",10)
+        u = self.createUser("da_zbur","enabled",10)
+        # Change timezone for da_zbur
+        u.utc_offset = -5
+        u.put()
+
         self.createUser("mr_qizz","disabled",10)
         self.createUser("mr_2_per_day","enabled",2)
 
@@ -256,8 +260,6 @@ class TestLearningList(unittest.TestCase):
         self.assertEqual("ny_blin", dailyList[0].twitter_user)
         self.assertEqual(d1.key(), dailyList[0].dict_entry.key())
         self.assertNotEqual(0, dailyList[0].next_serve_time)
-        # Check if new timestamp is within next 24 hours
-        self.assertTrue(current_timestamp+24*3600 > dailyList[0].next_serve_time)
         self.assertTrue(current_timestamp < dailyList[0].next_serve_time)
         
         self.assertEqual("da_zbur", dailyList[1].twitter_user)
@@ -346,10 +348,10 @@ moneymaking, remunerative [1]", message)
             m_list.append(message)
         # Testing that LearnListItem was rescheduled properly
         ll = LearnList.all().fetch(1)[0]
-        self.assertEqual(1.5, ll.interval_days)
+        self.assertEqual(2.5, ll.interval_days)
         self.assertEqual(1.5, ll.efactor)
         self.assertEqual(2, ll.total_served)
-        self.assertEqual(today + datetime.timedelta(days=1), ll.next_serve_date)
+        self.assertEqual(today + datetime.timedelta(days=2), ll.next_serve_date)
         self.assertEqual(sys.maxint, ll.next_serve_time)
 
         self.assertEqual(["@da_zbur lucrative[LOO-kruh-tiv]: profitable, \
@@ -622,7 +624,7 @@ moneymaking, remunerative [1]"], m_list)
         self.assertEqual(90, q1.answer_rating)
         self.assertEqual(90, q1.lli_ref.latest_answer_rating)
         self.assertEqual(sys.maxint, q1.lli_ref.next_serve_time)
-        self.assertEqual(1.4, q1.lli_ref.efactor)
+        self.assertEqual(1.6, q1.lli_ref.efactor)
         self.assertEqual(3.2*1.3, q1.lli_ref.interval_days)
 
         # For bad question

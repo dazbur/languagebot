@@ -20,8 +20,9 @@ from langbot_globals import *
 
 
 random.seed()
-
-
+# Assuming BuildDailyList runs as midnight UTC, 
+# first message to be sent to user not earlier than 8 AM - timzone offset
+FIRSTMESSAGEHOUR = 8 
 
 def addDays(date, days):
     return date + datetime.timedelta(days=days)
@@ -79,14 +80,14 @@ def calculateAnswerRating(original, answer):
 # we increase EF by 0.1
 def getNextInterval(n,prev_interval,prev_efactor,answer_rating):
     if n == 1:
-        return  {'new_interval':1.5, 'new_efactor':1.5}
+        return  {'new_interval':2.5, 'new_efactor':1.5}
 
     new_interval = prev_interval * prev_efactor
     new_efactor = prev_efactor
     if answer_rating < ONEMATCHPERCENT - 10:
         new_efactor = prev_efactor - 0.2
     if answer_rating >= ONEMATCHPERCENT - 10 :
-        new_efactor = prev_efactor + 0.1
+        new_efactor = prev_efactor + 0.3
     return {'new_interval':round(new_interval,2),\
         'new_efactor':round(new_efactor,2)}
 
@@ -158,6 +159,9 @@ def buildDailyList(day, logging):
         llQuery = LearnList.all().filter("twitter_user =",\
                 user.twitter).filter("next_serve_date =",day)
         use_questions = user.use_questions
+        utc_offset = 0
+        if user.utc_offset != None:
+            utc_offset = user.utc_offset
         i = 0
         message_list = []
         for learnListItem in llQuery.run():
@@ -175,8 +179,9 @@ def buildDailyList(day, logging):
         interval_gen = getNextRunInterval(len(message_list))
         for l in  message_list:
             try:
+                time_shift = FIRSTMESSAGEHOUR*3600 - utc_offset*3600
                 s = interval_gen.next()
-                l.next_serve_time = current_timestamp + s
+                l.next_serve_time = current_timestamp + s + time_shift
                 # Create new question entry for every second serve
                 # If user has this option enabled
                 if use_questions == "yes" and (l.total_served % 2 == 0):
