@@ -20,6 +20,8 @@ from controllers.details import Details
 from controllers.learnlist import BuildDailyListScheduler
 from controllers.learnlist import SendMessagesScheduler
 from controllers.learnlist import SendDailyMail
+from controllers.rpchandler import RPCHandler
+from controllers.vocabulary import Vocabulary
 
 
 # Initialize webb application. Assosiates index URL with MainPage class
@@ -35,6 +37,8 @@ application = webapp.WSGIApplication(
                                     ('/profile', Profile),
                                     ('/details', Details),
                                     ('/admin_model', Admin),
+                                    ('/vocabulary', Vocabulary),
+                                    ('/rpc', RPCHandler),
                                     ],
                                      debug=True)
 

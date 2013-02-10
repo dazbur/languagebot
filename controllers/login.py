@@ -32,7 +32,7 @@ class Login(webapp.RequestHandler):
                 .get()
         if user:
             set_current_user(user)
-            self.redirect("/profile")
+            self.redirect("/details")
         else:
             model["login"] = "fail"
             self.response.out.write(template.render("views/login.html", model))

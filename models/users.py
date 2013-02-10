@@ -18,4 +18,6 @@ class User(db.Model):
     follow_lang_list    = db.StringProperty()
     use_questions       = db.StringProperty()
     use_daily_email     = db.StringProperty()
+    total_points        = db.IntegerProperty()
+
     

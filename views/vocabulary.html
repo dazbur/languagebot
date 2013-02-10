@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+      <div class="navbar">
+      <div class="navbar-inner">
+        <ul class="nav">
+          <li><a href="/details">Home</a></li>
+          <li class="active"><a href="#">Vocabulary</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/signout">Log out</a></li>
+        </ul>
+
+      </div>
+    </div> <!-- Navigation Bar-->
+    <div class="row">
+        <div class="span3">          
+          <div class="well">
+		    <form method="post">
+                <input  type="text" name="new_word" 
+                    placeholder="word: meaning1,meaning2,..."/>
+                <button type="submit" class="btn"/>Add new word
+              <form>
+          </div>
+        </div> <!-- Sidebar -->
+        
+        <div class="span9">
+        	<h3>Your Vocabulary</h3>
+          <table class="table">
+            <thread>
+              <th>Word</th>
+              <th>Meaning</th>
+            </thread>
+          <tbody>
+          
+          {% for i in dict_row %}
+            <tr>
+             <td>{{ i.0 }}</td>
+             <td>{{ i.1 }}</td>
+            </tr>
+          {% endfor %}
+          
+         </tbody>
+         </table>
+        </div><!-- Main Area -->
+    </div> <!-- Row-->
+</div><!-- Container-->
+{% endblock %}

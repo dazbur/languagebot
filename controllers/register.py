@@ -46,6 +46,7 @@ class Register(webapp.RequestHandler):
         user.messages_per_day = 10
         user.default_source_lang = "en"
         user.follow_lang_list = "en"
+        user.total_points = 0
 
         user.put()
 

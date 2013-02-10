@@ -23,16 +23,18 @@ from controllers.learnlist  import buildDailyList
 from controllers.learnlist  import prepareTwitterMessage
 from controllers.learnlist  import prepareQuestionMessage
 from controllers.learnlist  import sendMessagesGenerator
-from controllers.details    import getParameters
 from controllers.learnlist  import calculateAnswerRating
 from controllers.learnlist  import prepareEmailMessagesGenerator
 from controllers.learnlist  import acknowledgeQuestions
+from controllers.vocabulary import getParameters
+from controllers.rpchandler import getLatestAnswers
 from models.learnlist       import LearnList
 from models.dictionary      import Dictionary
 from models.users           import User
 from models.questions       import Question
+from langbot_globals        import *
 
-from twitter                import Status
+from twitter                import Status, DirectMessage
 
 class TestMessageParsing(unittest.TestCase):
     
@@ -41,7 +43,7 @@ class TestMessageParsing(unittest.TestCase):
         result = parseMessage(message, "LanguageBot")
         self.assertEqual(result['word'], "capex")
         self.assertEqual(result['pronounce'], "")
-        self.assertEqual(result['meaning'], "capital expenditures; капитальные затраты")
+        self.assertEqual(result['meaning'], "capital expenditures, капитальные затраты")
 
     def testParsing2(self):
         message = "  @languagebot lucrative[LOO-kruh-tiv]: profitable, moneymaking, remunerative "
@@ -69,29 +71,32 @@ class TestProcessMessage(unittest.TestCase):
         self.testbed.init_datastore_v3_stub()
         # Preparing datastore by prepopulating some data
         user = User()
-        user.username = "ny_blin"
-        user.twitter =  "ny_blin"
+        user.username = "da_zbur"
+        user.twitter =  "da_zbur"
+        user.total_points = 0
         user.put()
 
     def tearDown(self):
         self.testbed.deactivate()
 
     def testProcessMessageNormalAddForExistingUser(self):
-        json_file = open("files/message1.json")
+        json_file = open("files/direct_message1.json")
         message_json = simplejson.load(json_file)
-        twitter_status = Status.NewFromJsonDict(message_json)
-        processMessage(twitter_status)
+        twitter_dm = DirectMessage.NewFromJsonDict(message_json)
+        processMessage(twitter_dm)
         query = Dictionary.all()        
         results =   query.fetch(1)
         self.assertEqual(1, len(results))
         self.assertEqual("", results[0].pronounce)
-        self.assertEqual("ny_blin", results[0].twitter_user)
-        self.assertEqual(171632287904043008, results[0].message_id)
-        self.assertEqual("ferociously(en)", results[0].word)
-        self.assertEqual(u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.",\
+        self.assertEqual("da_zbur", results[0].twitter_user)
+        self.assertEqual(289180663729512448L, results[0].message_id)
+        self.assertEqual("to advet", results[0].word)
+        self.assertEqual(u"обращаться к,ссылаться на",\
          results[0].meaning)
         self.assertEqual(0, results[0].served)
         self.assertEqual(None, results[0].source_lang)
+        self.assertEqual(1, User.all().filter("twitter =",\
+         "da_zbur").get().total_points)
         # Test integration with LearnList
         query = LearnList.all()
         ll_results = query.fetch(2)
@@ -99,33 +104,32 @@ class TestProcessMessage(unittest.TestCase):
         # Check if LearnList references same object
         self.assertEqual(ll_results[0].dict_entry.key(), results[0].key())
 
+    def testProcessDuplicateWord(self):
+        json_file = open("files/direct_message1.json")
+        message_json = simplejson.load(json_file)
+        twitter_dm = DirectMessage.NewFromJsonDict(message_json)
+        processMessage(twitter_dm)
+        
+        json_file = open("files/direct_message1.json")
+        message_json = simplejson.load(json_file)
+        twitter_dm = DirectMessage.NewFromJsonDict(message_json)
+        processMessage(twitter_dm)
+        
+        query = Dictionary.all()        
+        results =   query.fetch(1)
+        self.assertEqual(1, len(results))
+
     def testProcessMessageFromNonExistentUser(self):
         # Message from user "spammer" who doesn't exist in database
         # It must not be processed and must not be saved
-        json_file = open("files/message2.json")
+        json_file = open("files/direct_message_spammer.json")
         message_json = simplejson.load(json_file)
-        twitter_status = Status.NewFromJsonDict(message_json)
-        processMessage(twitter_status)
+        twitter_dm = DirectMessage.NewFromJsonDict(message_json)
+        processMessage(twitter_dm)
         query = Dictionary.all()        
         results =   query.fetch(1)
         self.assertEqual(0, len(results))
-        self.assertEqual("spammer", twitter_status.user.screen_name)
-        # Test integration with LearnList
-        query = LearnList.all()
-        ll_results = query.fetch(2)
-        self.assertEqual(0, len(ll_results))
-
-    def testProcessMessageFromExistingUserButNotReply(self):
-        # Message from exsitng user, but not a reply
-        # Such messages, like retweets must not me added
-        json_file = open("files/message3.json")
-        message_json = simplejson.load(json_file)
-        twitter_status = Status.NewFromJsonDict(message_json)
-        processMessage(twitter_status)
-        query = Dictionary.all()        
-        results =   query.fetch(1)
-        self.assertEqual(0, len(results))
-        self.assertEqual("ny_blin", twitter_status.user.screen_name)
+        self.assertEqual("spammer", twitter_dm.sender_screen_name)
         # Test integration with LearnList
         query = LearnList.all()
         ll_results = query.fetch(2)
@@ -153,6 +157,7 @@ class TestLearningList(unittest.TestCase):
         user.username = twitter_user
         user.account_status = account_status
         user.messages_per_day = messages_per_day
+        user.total_points = 0
         user.put()
         return user
 
@@ -182,7 +187,7 @@ class TestLearningList(unittest.TestCase):
         return learnListItem        
     
     def testGetNextInterval(self):
-        l = [60,55,90,87]
+        l = [-2,-4,6,0]
         n = 0
         res = []
         prev_interval = 0
@@ -204,11 +209,12 @@ class TestLearningList(unittest.TestCase):
         user = User()
         user.username = "ny_blin"
         user.twitter =  "ny_blin"
+        user.total_points = 0
         user.put()
-        json_file = open("files/message1.json")
+        json_file = open("files/direct_message2.json")
         message_json = simplejson.load(json_file)
-        twitter_status = Status.NewFromJsonDict(message_json)
-        processMessage(twitter_status)
+        twitter_dm = DirectMessage.NewFromJsonDict(message_json)
+        processMessage(twitter_dm)
         query = LearnList.all().filter('twitter_user =','ny_blin')
         results = query.fetch(2)
         self.assertEqual(1, len(results))
@@ -324,9 +330,9 @@ class TestLearningList(unittest.TestCase):
         message = prepareTwitterMessage(l1)
         message2 = prepareTwitterMessage(l2)
 
-        self.assertEqual("@da_zbur lucrative[LOO-kruh-tiv]: profitable, \
+        self.assertEqual("lucrative[LOO-kruh-tiv]: profitable, \
 moneymaking, remunerative [1]", message)
-        self.assertEqual(u"@da_zbur ferociously(en): жестоко, \
+        self.assertEqual(u"ferociously(en): жестоко, \
 яростно, свирепо, дико, неистово. Ужасно, невыносимо. [1]", message2)
 
     def testSendMessages(self):
@@ -354,7 +360,7 @@ moneymaking, remunerative [1]", message)
         self.assertEqual(today + datetime.timedelta(days=2), ll.next_serve_date)
         self.assertEqual(sys.maxint, ll.next_serve_time)
 
-        self.assertEqual(["@da_zbur lucrative[LOO-kruh-tiv]: profitable, \
+        self.assertEqual(["lucrative[LOO-kruh-tiv]: profitable, \
 moneymaking, remunerative [1]"], m_list)
 
     def testSendMessagesDisabled(self):
@@ -399,7 +405,7 @@ moneymaking, remunerative [1]"], m_list)
         l1 = self.createLearnListItem("da_zbur",d1, today, current_time)
         l2 = self.createLearnListItem("da_zbur",d2, date2)
         params = getParameters(u)
-
+        
         self.assertEqual(["lucrative [LOO-kruh-tiv]","profitable, moneymaking, remunerative",
             today_str], params["dict_row"][0])
         self.assertEqual(["amaranthine ",u"неувядающий, вечный",
@@ -408,21 +414,23 @@ moneymaking, remunerative [1]"], m_list)
     def testCalculateAnswerRating(self):
         original = 'profitable, moneymaking, remunerative'
 
-        # No match -- 0%
+        # No match == -POINTS_PER_GUESS
         res = calculateAnswerRating(original, '-');
-        self.assertEqual(0, res)
-        # One good match -- 80%
+        self.assertEqual(-POINTS_PER_GUESS, res)
+        # One good match == POINTS_PER_GUESS 
         res = calculateAnswerRating(original, 'moneymaking');
-        self.assertEqual(80, res)
-        # One partially good match < 80%
+        self.assertEqual(POINTS_PER_GUESS, res)
+        # One partially good match 
         res = calculateAnswerRating(original, 'profetabl');
-        self.assertTrue(res < 80)
-        # Full match -- 100%
-        res = calculateAnswerRating(original, 'profitable,moneymaking,remunerative');
-        self.assertEqual(100, res)
+        self.assertTrue(POINTS_PER_GUESS, res)
+        # Full match PPGx1 + PPGx2 + PPGx3
+        res = calculateAnswerRating(original,\
+             'profitable,moneymaking,remunerative');
+        self.assertEqual(POINTS_PER_GUESS + 2*POINTS_PER_GUESS+\
+            3*POINTS_PER_GUESS, res)
         # Full match with errors  80<= res <100
         res = calculateAnswerRating(original, 'profitable,monemeking');
-        self.assertTrue(res <100 and res >= 80)
+        self.assertTrue(POINTS_PER_GUESS, res)
 
     def testQuestionAdding(self):
         # This is testing buildDailyList method to make sure that
@@ -456,8 +464,8 @@ moneymaking, remunerative [1]"], m_list)
         message = prepareQuestionMessage(l1)
         message2 = prepareQuestionMessage(l2)
 
-        self.assertEqual("@da_zbur lucrative[LOO-kruh-tiv]:? [1]", message)
-        self.assertEqual(u"@da_zbur ferociously(en):? [1]", message2)
+        self.assertEqual(u"lucrative[LOO-kruh-tiv]:? [1]", message)
+        self.assertEqual(u"ferociously(en):? [1]", message2)
 
     def testTwitterMockupStatusId(self):
         Twitter = TwitterMockup()
@@ -503,11 +511,11 @@ moneymaking, remunerative [1]"], m_list)
             m_list.append(message)
         # Testing that proper Question entity was created
         q = Question.all().fetch(1)[0]
-        self.assertEqual(3492, q.question_message_id)
+        self.assertEqual(2653, q.question_message_id)
         self.assertEqual(today, q.question_sent)
         self.assertEqual(4, l1.total_served)
         self.assertEqual(sys.maxint, q.lli_ref.next_serve_time)
-        self.assertEqual("@da_zbur lucrative[LOO-kruh-tiv]:? [4]", m_list[0])
+        self.assertEqual("lucrative[LOO-kruh-tiv]:? [4]", m_list[0])
 
     def testCheckForAnswer(self):
         # I should collapse this code into something reusable
@@ -547,9 +555,10 @@ moneymaking, remunerative [1]"], m_list)
 
         # Question for word d1 was genereated and sent
         # Now user prepares an answer
-        answer = "@LanguageBot moneymaking, profitable"
+        answer = "lucrative: moneymaking, profitable"
         m = Twitter.api.PostUpdate(answer, in_reply_to_s_id=q.question_message_id)
-        q2 = checkForAnswer(u, m)
+        parsed_dict = parseMessage(m.text)
+        q2 = checkForAnswer(parsed_dict, u.twitter)
         self.assertEqual(q.key(), q2.key())
 
     def testAnswersIntegration(self):
@@ -571,27 +580,37 @@ moneymaking, remunerative [1]"], m_list)
             u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
         d2 = self.createDictEntry("da_zbur",2,"ferociously(en)",\
             u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.")
+        d3 = self.createDictEntry("da_zbur",2,"confounder",\
+            u"искажающий результаты фактор")
 
         l1 = self.createLearnListItem("da_zbur",d1,today,current_time)
         l2 = self.createLearnListItem("da_zbur",d2,today,current_time)        
-        
+        l3 = self.createLearnListItem("da_zbur",d3,today,current_time)
+
         # forcing question to be asked        
         l1.total_served = 4
         l2.total_served = 6
+        l3.total_served = 8
         l1.interval_days = 3.2
         l1.efactor = 1.3
         l2.interval_days = 7.4
         l2.efactor = 0.98
+        l3.interval_days = 17.4
+        l3.efactor = 1.98
         l1.put()
         l2.put()
+        l3.put()
        
         buildDailyList(today, logging)
         # Keep in mind building daily list means serve times will be 
         # randomly distributed throighout the day!
         l1.next_serve_time = current_time
         l2.next_serve_time = current_time
+        l3.next_serve_time = current_time
+
         l2.put()
         l1.put()
+        l3.put()
 
         messages_generator = sendMessagesGenerator(Twitter, logging)
         m_list = []
@@ -601,40 +620,59 @@ moneymaking, remunerative [1]"], m_list)
             except StopIteration:
                 break
             m_list.append(message)
+       
+        q1 = Question.all().fetch(3)[0]
+        q2 = Question.all().fetch(3)[1]
+        q3 = Question.all().fetch(3)[2]
 
-        q1 = Question.all().fetch(2)[0]
-        q2 = Question.all().fetch(2)[1]
 
         # This is a good answer
-        a1 = "@LanguageBot moneymaking, profitable"
+        a1 = "lucrative: moneymaking, profitable"
         # This is crappy answer
-        a2 = u"@LanguageBot ---"
-        m1 = Twitter.api.PostUpdate(a1, in_reply_to_s_id=q1.question_message_id,\
-            user_screen_name="da_zbur",in_reply_to_screen_name="LanguageBot")
-        m2 = Twitter.api.PostUpdate(a2, in_reply_to_s_id=q2.question_message_id,\
-            user_screen_name="da_zbur",in_reply_to_screen_name="LanguageBot")
+        a2 = u"ferociously(en): ---"
+        # This is multiword answer
+        a3 = u"Confounder: искажающий результаты фактор"
+        m1 = Twitter.api.PostDirectMessage("LangBotStage", a1, "da_zbur")
+        m2 = Twitter.api.PostDirectMessage("LangBotStage", a2, "da_zbur")
+        m3 = Twitter.api.PostDirectMessage("LangBotStage", a3, "da_zbur")
         processMessage(m1)
         processMessage(m2)
+        processMessage(m3)
 
-        q1 = Question.all().fetch(2)[0]
-        q2 = Question.all().fetch(2)[1]
-        
+        q1 = Question.all().fetch(3)[0]
+        q2 = Question.all().fetch(3)[1]
+        q3 = Question.all().fetch(3)[2]
+
         # For good question
         self.assertEqual(today, q1.answer_received)
-        self.assertEqual(90, q1.answer_rating)
-        self.assertEqual(90, q1.lli_ref.latest_answer_rating)
+        self.assertEqual(6, q1.answer_rating)
+        self.assertEqual(6, q1.lli_ref.latest_answer_rating)
         self.assertEqual(sys.maxint, q1.lli_ref.next_serve_time)
         self.assertEqual(1.6, q1.lli_ref.efactor)
         self.assertEqual(3.2*1.3, q1.lli_ref.interval_days)
+        self.assertEqual("moneymaking, profitable", q1.answer_text)
 
         # For bad question
         self.assertEqual(today, q2.answer_received)
-        self.assertEqual(0, q2.answer_rating)
-        self.assertEqual(0, q2.lli_ref.latest_answer_rating)
+        self.assertEqual(-2, q2.answer_rating)
+        self.assertEqual(-2, q2.lli_ref.latest_answer_rating)
         self.assertEqual(0, q2.lli_ref.next_serve_time)
         self.assertEqual(today, q2.lli_ref.next_serve_date)
+        self.assertEqual("---", q2.answer_text)
+
+        # For multiword answer
+        self.assertEqual(today, q3.answer_received)
+        self.assertEqual(2, q3.answer_rating)
+        self.assertEqual(2, q3.lli_ref.latest_answer_rating)
+        self.assertEqual(sys.maxint, q3.lli_ref.next_serve_time)
+        self.assertEqual(u"искажающий результаты фактор", q3.answer_text)
+
+        # Check total user points, assuming he had 0
+        self.assertEqual(6
+            , User.all().filter("twitter =","da_zbur").\
+            get().total_points)
         
-    def testPerpareEmailMesaage(self):
+    def testPrepareEmailMesaage(self):
         today = datetime.date.today()
         current_time = int(time.time())
         u = self.createUser("da_zbur","enabled",10)
@@ -708,8 +746,94 @@ moneymaking, remunerative [1]"], m_list)
 
         unack_count = Question.all().filter("answer_received =", None).count()
         self.assertEqual(0, unack_count) 
-        
 
+class TestRPC(unittest.TestCase):
+    def setUp(self):
+        # First, create an instance of the Testbed class.
+        self.testbed = testbed.Testbed()
+        # Then activate the testbed, which prepares the service stubs for use.
+        self.testbed.activate()
+        # Next, declare which service stubs you want to use.
+        self.testbed.init_datastore_v3_stub()
+                
+    
+    def tearDown(self):
+        self.testbed.deactivate()
+
+    # Helper methods for sample data loadinf: createUser,
+    # createDictEntry, createLearnListItem
+    def createUser(self, twitter_user, account_status, messages_per_day):
+        user = User()
+        user.twitter = twitter_user
+        user.username = twitter_user
+        user.account_status = account_status
+        user.messages_per_day = messages_per_day
+        user.put()
+        return user
+
+    def createDictEntry(self, twitter_user, message_id, word, meaning,\
+         pronounce=""):
+        dictEntry = Dictionary()
+        dictEntry.twitter_user = twitter_user
+        dictEntry.message_id = message_id
+        dictEntry.word = word
+        dictEntry.pronounce = pronounce
+        dictEntry.meaning = meaning
+        dictEntry.served = 0
+        dictEntry.source_lang = ""
+        dictEntry.target_lang = ""
+        dictEntry.put()
+        return dictEntry
+
+    def createLearnListItem(self, twitter_user, dict_entry,\
+        next_serve_date, next_serve_time=0):
+        learnListItem = LearnList()
+        learnListItem.twitter_user = twitter_user
+        learnListItem.dict_entry = dict_entry
+        learnListItem.next_serve_date = next_serve_date
+        learnListItem.next_serve_time = next_serve_time
+        learnListItem.total_served = 1
+        learnListItem.put()
+        return learnListItem
+
+    def createQuestion(self, lli_ref, question_sent, twitter_user,\
+        word, answer_text, question_message_id, answer_received, answer_rating):
+        q = Question()
+        q.lli_ref = lli_ref
+        q.question_sent = question_sent
+        q.twitter_user = twitter_user
+        q.word = word
+        q.answer_text = answer_text
+        q.question_message_id = question_message_id
+        q.answer_received = answer_received
+        q.answer_rating = answer_rating
+        q.put()
+        return q
+
+    def testGetLatestAnswers(self):
+        Twitter = TwitterMockup()
+        today = datetime.date.today()
+        current_time = int(time.time())
+        
+        u = self.createUser("da_zbur","enabled",10)
+        u.use_questions = "yes"
+        u.put()
+
+        d1 = self.createDictEntry("da_zbur",2,"lucrative",\
+            u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
+        d2 = self.createDictEntry("da_zbur",2,"ferociously(en)",\
+            u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.")
+        
+        l1 = self.createLearnListItem("da_zbur",d1,today,current_time)
+        l2 = self.createLearnListItem("da_zbur",d2,today,current_time)        
+        
+        q1 = self.createQuestion(l1, today, "da_zbur", d1.word,
+             "profitable, moneymaking", 1, today, 100)
+        q2 = self.createQuestion(l2, today, "da_zbur", d2.word,
+             u"лажа", 2, today, 0)
+        resultJSON = getLatestAnswers(u)
+        self.assertEqual(resultJSON, """[{"rating": 100, "word": "lucrative", "answers": [{"status": "match", "answer_text": "profitable"}, {"status": "match", "answer_text": "moneymaking"}, {"status": "neutral", "answer_text": "remunerative"}]}, {"rating": 0, "word": "ferociously(en)", "answers": [{"status": "neutral", "answer_text": "\u044f\u0440\u043e\u0441\u0442\u043d\u043e"}, {"status": "neutral", "answer_text": "\u043d\u0435\u0438\u0441\u0442\u043e\u0432\u043e. \u0423\u0436\u0430\u0441\u043d\u043e"}, {"status": "neutral", "answer_text": "\u0436\u0435\u0441\u0442\u043e\u043a\u043e"}, {"status": "neutral", "answer_text": "\u0441\u0432\u0438\u0440\u0435\u043f\u043e"}, {"status": "neutral", "answer_text": "\u0434\u0438\u043a\u043e"}, {"status": "neutral", "answer_text": "\u043d\u0435\u0432\u044b\u043d\u043e\u0441\u0438\u043c\u043e."}, {"status": "wrong", "answer_text": "\u043b\u0430\u0436\u0430"}]}]""")
+    
         
 if __name__ == "__main__":
     unittest.main()        

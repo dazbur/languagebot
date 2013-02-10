@@ -54,6 +54,24 @@ class Status(object):
 		self.retweeted_status = retweeted_status
 		self.retweet_count = retweet_count
 
+class DirectMessage(object):
+ 
+  def __init__(self,
+               id=None,
+               created_at=None,
+               sender_id=None,
+               sender_screen_name=None,
+               recipient_id=None,
+               recipient_screen_name=None,
+               text=None):
+    self.id = id
+    self.created_at = created_at
+    self.sender_id = sender_id
+    self.sender_screen_name = sender_screen_name
+    self.recipient_id = recipient_id
+    self.recipient_screen_name = recipient_screen_name
+    self.text = text
+
 class APIMockUp:
 	def PostUpdate(self, message, in_reply_to_s_id=None,
 			user_screen_name=None, in_reply_to_screen_name=None):
@@ -65,6 +83,17 @@ class APIMockUp:
 		status = Status(id=s, in_reply_to_status_id=in_reply_to_s_id,\
 			 text=message, user=u, in_reply_to_screen_name=in_reply_to_screen_name)
 		return status
+
+	def PostDirectMessage(self, to_user, message, from_user=None):
+		# We will return a naive hash of the message as a status_id
+		s = 0
+		for i in message:
+			s = s + ord(i)
+		dm = DirectMessage(id=s, sender_screen_name=from_user,\
+			recipient_screen_name=to_user, text=message)
+		return dm
+
+
 
 class TwitterMockup:
 	def __init__(self):

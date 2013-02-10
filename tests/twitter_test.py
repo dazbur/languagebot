@@ -10,5 +10,5 @@ api = twitter.Api(consumer_key='8hUziMDlvgoMLOPskIrIA',
                 access_token_secret='4qqahAmLF230ooXE9FRtaWg69cilhvPGzVNJ8IrMhLQ',
                 debugHTTP=True)
 
-replies = api.GetReplies()
-print [x.in_reply_to_status_id for x in replies]
+replies = api.GetDirectMessages()
+print [x for x in replies]

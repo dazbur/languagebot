@@ -1,49 +1,80 @@
 {% extends "base.html" %}
+{% block top %}
+<script>
+$( document ).ready(function() {
 
+  // Building latest answers section
+  $.ajax({
+    url: "rpc",
+    data:{action:"getLatestAnswers"},
+    type: "GET",
+    dataType: "json",
+    success: function( json ){
+      var $answerTable = $("<table>", {class:"table"});
+      var tableRows = [];
+
+      for(i=0; i<json.length; i++){
+        var item = json[i];
+        var row  = "<tr><td>" + item.word + "</td>";
+        row = row + "<td>"
+        for(j=0; j<item.answers.length; j++){
+          if (item.answers[j].status=="match"){
+            row = row + '<span class="label label-success">' +
+             item.answers[j].answer_text + "</span>" + " ";
+          }
+          if (item.answers[j].status=="wrong"){
+            row = row + '<span class="label label-important">' +
+             item.answers[j].answer_text + "</span>"+ " ";
+          }
+          if (item.answers[j].status=="neutral"){
+            row = row + '<span class="label label">' +
+             item.answers[j].answer_text + "</span>"+ " ";
+          }
+
+        }
+        row = row + "</td>";
+        row = row + "<td>" + item.rating + " points </td>";
+        row = row + "</tr>";
+        tableRows.push(row);
+      }
+      $answerTable.append( tableRows.join("") );
+      $answerTable.append("</table>");
+      $answerTable.appendTo("#answerblock");
+      
+    }
+  })
+  });
+</script>
+{% endblock %}
 {% block content %}
 
     <div class="container">
-      <div class="row">
-        <div class="span4 offset11"><h4>{{ username }}</h4></div>
-      </div>
-      <div class="row">
-        <div class="span12"><p></p></div>
-      </div>
-      <div class="row">
-        <div class="span12"><p></p></div>
-      </div>
-      <div class="row">
-        <div class="span12"><p></p></div>
-      </div>
-      <form method="post">
-        <input  type="text" name="new_word"/>
-        <div><button type="submit" />Add new word</div>
-      </form>
+      <div class="navbar">
+      <div class="navbar-inner">
+        <ul class="nav">
+          <li class="active"><a href="#">Home</a></li>
+          <li><a href="/vocabulary">Vocabulary</a></li>
+          <li><a href="/profile">Profile</a></li>
+          <li><a href="/signout">Log out</a></li>
+        </ul>
 
-      <h1>Your dictionary</h1>
-      <table class="table">
-        <thread>
-          <th>Word</th>
-          <th>Meaning</th>
-          <th>Serve Date</th>
-        </thread>
-        <tbody>
-          
-          {% for i in dict_row %}
-            <tr>
-             <td>{{ i.0 }}</td>
-             <td>{{ i.1 }}</td>
-             <td>{{ i.2 }}</td>
-            </tr>
-          {% endfor %}
-          
-         </tbody>
+      </div>
+    </div> <!-- Navigation Bar-->
+      <div class="row">
+        <div class="span3">          
+          <div class="well">
 
-      </table>
+            <span class="badge badge-info">{{ stats_dict.total_points }}
+                 </span> total points earned</br>
+            <span class="badge badge-info">{{ stats_dict.total_words }}
+                  </span> words learned</br>
+          </div>
+      </div> <!-- Sidebar -->
 
-      
-    </div> <!-- /container -->
+      <div class="span9">
+       <h3>Recent answers</h3>
+          <div id="answerblock"></div> <!-- Populates by JavaScript -->
+    </div>
+  </div><!-- /Main area -->
+  </div> <!-- /container -->
 {% endblock %}
-    
-
-    

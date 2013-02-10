@@ -17,10 +17,18 @@ handlers:
 
 - url: /styles
   static_dir: styles
+
+- url: /js
+  static_dir: js
   
 - url: /images
   static_dir: images
-    
+
+- url: /remoteapi.*
+  script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
+  login: admin
+
 - url: /.*
   script: langbot_main.py
+
 

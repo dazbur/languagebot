@@ -20,9 +20,7 @@ from langbot_globals import *
 
 
 random.seed()
-# Assuming BuildDailyList runs as midnight UTC, 
-# first message to be sent to user not earlier than 8 AM - timzone offset
-FIRSTMESSAGEHOUR = 8 
+
 
 def addDays(date, days):
     return date + datetime.timedelta(days=days)
@@ -46,47 +44,28 @@ def calculateAnswerRating(original, answer):
                 r_max = r
         rating_list.append(r_max)
     
-    # The logic is the following. Answer with max rating which greater than MAXRATINGLIMIT 
-    # will give you ONEMATCHPERCENT result. At MINRATINGLIMIT this will 
-    # be ONEMATCHPERCENT - 10. You can get (100 - ONEMATCHPERCENT)/(words_count-1) 
-    # for rest of the words
-    # Anything smaller than MINRATINGLIMIT should be discarded as insignificant
+    # The logic is the following. You get POINTS_PER_GUESS for first right 
+    # answer, 2 x POINTS_PER_GUESS for second, etc. You get -POINTS_PER_GUESS
+    # for each wrong answer.    
+    i = 1
+    for r in rating_list:
+        if r > MINRATINGLIMIT:
+            result = result + POINTS_PER_GUESS * i
+        else:
+            result = result - POINTS_PER_GUESS
+        i = i + 1
     
-    rating_list = filter(lambda x: x > MINRATINGLIMIT, rating_list)
-    if len(rating_list) == 0:
-        return 0
+    return result
 
-    words_count = len(original_list)
-    r_max = max(rating_list)
-
-    if words_count == 1:
-        ONEMATCHPERCENT_local = 100
-    else:
-        ONEMATCHPERCENT_local = ONEMATCHPERCENT
-
-    if r_max >= MAXRATINGLIMIT:
-        result = ONEMATCHPERCENT_local
-    else:
-        result = ONEMATCHPERCENT_local - (r_max - MINRATINGLIMIT) / 0.01
-
-    if words_count > 1:
-        result = result + ((100 - ONEMATCHPERCENT_local)/(words_count -1))\
-         * (len(rating_list)-1)
-    
-
-    return int(result)
-
-# andwer_rating is a %. If it is greater than ONEMATCHPERCENT-10, than
-# we increase EF by 0.1
 def getNextInterval(n,prev_interval,prev_efactor,answer_rating):
     if n == 1:
         return  {'new_interval':2.5, 'new_efactor':1.5}
 
     new_interval = prev_interval * prev_efactor
     new_efactor = prev_efactor
-    if answer_rating < ONEMATCHPERCENT - 10:
+    if answer_rating < 0:
         new_efactor = prev_efactor - 0.2
-    if answer_rating >= ONEMATCHPERCENT - 10 :
+    if answer_rating >= 0:
         new_efactor = prev_efactor + 0.3
     return {'new_interval':round(new_interval,2),\
         'new_efactor':round(new_efactor,2)}
@@ -114,6 +93,7 @@ def addNewLearnListItem(twitter_user, dict_entry):
     l.efactor = i['new_efactor']
     l.next_serve_time = sys.maxint
     l.total_served = 1
+    l.latest_answer_rating = 0
     l.put()
 
 def prepareTwitterMessage(learnListItem):
@@ -123,7 +103,9 @@ def prepareTwitterMessage(learnListItem):
     else:
         pronounce = ""
     count = " [%s]" % served
-    message = "@" + learnListItem.twitter_user + " " + learnListItem.dict_entry.word\
+    #message = "@" + learnListItem.twitter_user + " " + learnListItem.dict_entry.word\
+    # + pronounce + ": " + learnListItem.dict_entry.meaning + count
+    message = learnListItem.dict_entry.word\
      + pronounce + ": " + learnListItem.dict_entry.meaning + count
     return message
 
@@ -134,7 +116,9 @@ def prepareQuestionMessage(learnListItem):
     else:
         pronounce = ""
     count = " [%s]" % served
-    message = "@" + learnListItem.twitter_user + " " + learnListItem.dict_entry.word\
+    #message = "@" + learnListItem.twitter_user + " " + learnListItem.dict_entry.word\
+    # + pronounce + ":?" + count
+    message = learnListItem.dict_entry.word\
      + pronounce + ":?" + count
     return message
 
@@ -144,7 +128,7 @@ def acknowledgeQuestions(day):
     for question in Question.all().filter("answer_received =", None).\
             filter("question_message_id !=", None):
         question.answer_received = day
-        question.answer_rating = 0
+        question.answer_rating = -POINTS_PER_GUESS
         question.lli_ref.latest_answer_rating = 0
         question.lli_ref.next_serve_time = 0
         question.lli_ref.next_serve_date = day
@@ -187,6 +171,8 @@ def buildDailyList(day, logging):
                 if use_questions == "yes" and (l.total_served % 2 == 0):
                     q = Question()
                     q.lli_ref = l
+                    q.twitter_user = user.twitter
+                    q.word = l.dict_entry.word
                     q.put()
                 l.put()
             except StopIteration:
@@ -253,17 +239,15 @@ def sendMessagesGenerator(TwitterAPI, logging):
             message = prepareTwitterMessage(lli)
 
         try:
-            status = TwitterAPI.api.PostUpdate(message)
+            #status = TwitterAPI.api.PostUpdate(message)
+            status = TwitterAPI.api.PostDirectMessage(lli.twitter_user,\
+             message)
             result = message
             # For questions we do no recalculate new interval right away
             # We do it when answer is recieved or no received
             # Instead we update Question entity
             if question == []:
-                if lli.latest_answer_rating >= 0:
-                    answer_rating = lli.latest_answer_rating
-                else:
-                    answer_rating = 100
-
+                answer_rating = lli.latest_answer_rating
                 rescheduleLearnListItem(lli, answer_rating)                
             else:
                 question[0].question_sent = today
@@ -276,6 +260,7 @@ def sendMessagesGenerator(TwitterAPI, logging):
 
 
         except TwitterError:
+            print TwitterError.message
             logging.error("Twitter error when sending message %s" % message)
         yield result
         

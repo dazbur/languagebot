@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% block body %}
+<body>
 {% block top %}
 <div id="signIn">
   {% if user %}
@@ -95,6 +97,8 @@ return numcheck.test(keychar);
     </div>
 <div class="box">
 {% endif %}
+{% endblock %}
+</body>
 {% endblock %}
 
 
