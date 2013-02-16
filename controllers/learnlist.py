@@ -50,7 +50,7 @@ def calculateAnswerRating(original, answer):
     for r in rating_list:
         if r > MINRATINGLIMIT:
             result = result + POINTS_PER_GUESS * i
-        i = i + 1
+            i = i + 1
     # You get -POINTS_PER_GUESS if you had no correct answers
     if result == 0:
         result = -POINTS_PER_GUESS

@@ -1,7 +1,7 @@
 cron:
 - description: check incoming 
   url: /check_incoming
-  schedule: every 3 minutes
+  schedule: every 1 minutes
 
 - description: send messages 
   url: /send_messages
