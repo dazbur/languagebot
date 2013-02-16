@@ -431,6 +431,9 @@ moneymaking, remunerative [1]"], m_list)
         # Full match with errors  80<= res <100
         res = calculateAnswerRating(original, 'profitable,monemeking');
         self.assertTrue(POINTS_PER_GUESS, res)
+        # One correct and one wrong
+        res = calculateAnswerRating(original, 'monemeking, expensive');
+        self.assertTrue(POINTS_PER_GUESS, res)
 
     def testQuestionAdding(self):
         # This is testing buildDailyList method to make sure that
@@ -811,30 +814,28 @@ class TestRPC(unittest.TestCase):
         return q
 
     def testGetLatestAnswers(self):
-        Twitter = TwitterMockup()
         today = datetime.date.today()
         current_time = int(time.time())
-        
-        u = self.createUser("da_zbur","enabled",10)
+
+        u = self.createUser("da_zbur", "enabled", 10)
         u.use_questions = "yes"
         u.put()
 
-        d1 = self.createDictEntry("da_zbur",2,"lucrative",\
-            u"profitable, moneymaking, remunerative","[LOO-kruh-tiv]")
-        d2 = self.createDictEntry("da_zbur",2,"ferociously(en)",\
+        d1 = self.createDictEntry("da_zbur", 2, "lucrative", \
+            u"profitable, moneymaking, remunerative", "[LOO-kruh-tiv]")
+        d2 = self.createDictEntry("da_zbur", 2, "ferociously(en)", \
             u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.")
-        
-        l1 = self.createLearnListItem("da_zbur",d1,today,current_time)
-        l2 = self.createLearnListItem("da_zbur",d2,today,current_time)        
-        
-        q1 = self.createQuestion(l1, today, "da_zbur", d1.word,
+
+        l1 = self.createLearnListItem("da_zbur", d1, today, current_time)
+        l2 = self.createLearnListItem("da_zbur", d2, today, current_time)
+
+        self.createQuestion(l1, today, "da_zbur", d1.word,
              "profitable, moneymaking", 1, today, 100)
-        q2 = self.createQuestion(l2, today, "da_zbur", d2.word,
+        self.createQuestion(l2, today, "da_zbur", d2.word,
              u"лажа", 2, today, 0)
         resultJSON = getLatestAnswers(u)
         self.assertEqual(resultJSON, """[{"rating": 100, "word": "lucrative", "answers": [{"status": "match", "answer_text": "profitable"}, {"status": "match", "answer_text": "moneymaking"}, {"status": "neutral", "answer_text": "remunerative"}]}, {"rating": 0, "word": "ferociously(en)", "answers": [{"status": "neutral", "answer_text": "\u044f\u0440\u043e\u0441\u0442\u043d\u043e"}, {"status": "neutral", "answer_text": "\u043d\u0435\u0438\u0441\u0442\u043e\u0432\u043e. \u0423\u0436\u0430\u0441\u043d\u043e"}, {"status": "neutral", "answer_text": "\u0436\u0435\u0441\u0442\u043e\u043a\u043e"}, {"status": "neutral", "answer_text": "\u0441\u0432\u0438\u0440\u0435\u043f\u043e"}, {"status": "neutral", "answer_text": "\u0434\u0438\u043a\u043e"}, {"status": "neutral", "answer_text": "\u043d\u0435\u0432\u044b\u043d\u043e\u0441\u0438\u043c\u043e."}, {"status": "wrong", "answer_text": "\u043b\u0430\u0436\u0430"}]}]""")
-    
-        
+
+
 if __name__ == "__main__":
-    unittest.main()        
-        
+    unittest.main()
