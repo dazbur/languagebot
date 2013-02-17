@@ -15,6 +15,22 @@ from controllers.learnlist import addNewLearnListItem, calculateAnswerRating,\
 from langbot_globals import *
 
 
+def parseOpt(message):
+    """Parses out optional section [] from the message
+    Optional section can include pronounciation or other info"""
+
+    result = ""
+    p = re.compile('\[.*\]')
+    m = p.search(message)
+    if m:
+        result = m.group()
+        # Remove [.*] from text
+        message = re.sub(p, "", message)
+    else:
+        result = ""
+    return (message, result)
+
+
 def parseMessage(message, botname=''):
     result = {}
     message = message.strip()
@@ -31,14 +47,7 @@ def parseMessage(message, botname=''):
     message = botname_re.sub('', message)
 
     # Find a pronunciation: word [pronounce]: meaning1, 2, ..
-    p = re.compile('\[.*\]')
-    m = p.search(message)
-    if m:
-        result["pronounce"] = m.group()
-        # Remove [.*] from text
-        message = re.sub(p, "", message)
-    else:
-        result["pronounce"] = ""
+    message, result["pronounce"] = parseOpt(message)
 
     words = message.split(':', 1)
     # If message is  valid definition:meaning1,meaning2... format

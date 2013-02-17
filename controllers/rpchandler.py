@@ -4,7 +4,7 @@ import logging
 from google.appengine.ext import webapp
 
 from current_session import current_user
-from controllers.incoming import parseMessage
+from controllers.incoming import parseMessage, parseOpt
 from models.questions import Question
 from models.dictionary import Dictionary
 from models.learnlist import LearnList
@@ -42,6 +42,7 @@ def getLatestAnswers(user):
 
 
 def editDictEntry(user, original_word, new_string):
+    original_word, _ = parseOpt(original_word)
     dict_entry = Dictionary.all().\
         filter("twitter_user =", user.twitter).\
         filter("word =", original_word.strip()).get()
@@ -56,6 +57,7 @@ def editDictEntry(user, original_word, new_string):
 
 
 def deleteDictEntry(user, word):
+    word, _ = parseOpt(word)
     dict_entry = Dictionary.all().\
         filter("twitter_user =", user.twitter).\
         filter("word =", word.strip()).get()

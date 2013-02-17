@@ -857,7 +857,7 @@ class TestRPC(unittest.TestCase):
              "profitable, moneymaking", 1, today, 100)
         self.createQuestion(l2, today, "da_zbur", d2.word,
              u"лажа", 2, today, 0)
-        deleteDictEntry(u, "lucrative")
+        deleteDictEntry(u, "lucrative[LOO-kruh-tiv]")
 
         self.assertEqual(None, Dictionary.all().\
             filter("word =", "lucrative").get())
@@ -884,7 +884,7 @@ class TestRPC(unittest.TestCase):
              "profitable, moneymaking", 1, today, 100)
         self.createQuestion(l2, today, "da_zbur", d2.word,
              u"лажа", 2, today, 0)
-        editDictEntry(u, "lucrative", "lucrative[adj]:profitable")
+        editDictEntry(u, "lucrative[LOO-kruh-tiv]", "lucrative[adj]:profitable")
         new_entry = Dictionary.all().filter("word =", "lucrative").get()
 
         self.assertEqual("profitable", new_entry.meaning)
