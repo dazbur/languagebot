@@ -28,6 +28,8 @@ from controllers.learnlist  import prepareEmailMessagesGenerator
 from controllers.learnlist  import acknowledgeQuestions
 from controllers.vocabulary import getParameters
 from controllers.rpchandler import getLatestAnswers
+from controllers.rpchandler import deleteDictEntry
+from controllers.rpchandler import editDictEntry
 from models.learnlist       import LearnList
 from models.dictionary      import Dictionary
 from models.users           import User
@@ -835,6 +837,58 @@ class TestRPC(unittest.TestCase):
              u"лажа", 2, today, 0)
         resultJSON = getLatestAnswers(u)
         self.assertEqual(resultJSON, """[{"rating": 100, "word": "lucrative", "answers": [{"status": "match", "answer_text": "profitable"}, {"status": "match", "answer_text": "moneymaking"}, {"status": "neutral", "answer_text": "remunerative"}]}, {"rating": 0, "word": "ferociously(en)", "answers": [{"status": "neutral", "answer_text": "\u044f\u0440\u043e\u0441\u0442\u043d\u043e"}, {"status": "neutral", "answer_text": "\u043d\u0435\u0438\u0441\u0442\u043e\u0432\u043e. \u0423\u0436\u0430\u0441\u043d\u043e"}, {"status": "neutral", "answer_text": "\u0436\u0435\u0441\u0442\u043e\u043a\u043e"}, {"status": "neutral", "answer_text": "\u0441\u0432\u0438\u0440\u0435\u043f\u043e"}, {"status": "neutral", "answer_text": "\u0434\u0438\u043a\u043e"}, {"status": "neutral", "answer_text": "\u043d\u0435\u0432\u044b\u043d\u043e\u0441\u0438\u043c\u043e."}, {"status": "wrong", "answer_text": "\u043b\u0430\u0436\u0430"}]}]""")
+
+    def testDeleteDictEntry(self):
+        today = datetime.date.today()
+        current_time = int(time.time())
+        u = self.createUser("da_zbur", "enabled", 10)
+        u.use_questions = "yes"
+        u.put()
+
+        d1 = self.createDictEntry("da_zbur", 2, "lucrative", \
+            u"profitable, moneymaking, remunerative", "[LOO-kruh-tiv]")
+        d2 = self.createDictEntry("da_zbur", 2, "ferociously(en)", \
+            u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.")
+
+        l1 = self.createLearnListItem("da_zbur", d1, today, current_time)
+        l2 = self.createLearnListItem("da_zbur", d2, today, current_time)
+
+        self.createQuestion(l1, today, "da_zbur", d1.word,
+             "profitable, moneymaking", 1, today, 100)
+        self.createQuestion(l2, today, "da_zbur", d2.word,
+             u"лажа", 2, today, 0)
+        deleteDictEntry(u, "lucrative")
+
+        self.assertEqual(None, Dictionary.all().\
+            filter("word =", "lucrative").get())
+        self.assertEqual(1, LearnList.all().count())
+        self.assertEqual(1, Question.all().count())
+        self.assertEqual(1, Dictionary.all().count())
+
+    def testEditDictEntry(self):
+        today = datetime.date.today()
+        current_time = int(time.time())
+        u = self.createUser("da_zbur", "enabled", 10)
+        u.use_questions = "yes"
+        u.put()
+
+        d1 = self.createDictEntry("da_zbur", 2, "lucrative", \
+            u"profitable, moneymaking, remunerative", "[LOO-kruh-tiv]")
+        d2 = self.createDictEntry("da_zbur", 2, "ferociously(en)", \
+            u"жестоко, яростно, свирепо, дико, неистово. Ужасно, невыносимо.")
+
+        l1 = self.createLearnListItem("da_zbur", d1, today, current_time)
+        l2 = self.createLearnListItem("da_zbur", d2, today, current_time)
+
+        self.createQuestion(l1, today, "da_zbur", d1.word,
+             "profitable, moneymaking", 1, today, 100)
+        self.createQuestion(l2, today, "da_zbur", d2.word,
+             u"лажа", 2, today, 0)
+        editDictEntry(u, "lucrative", "lucrative[adj]:profitable")
+        new_entry = Dictionary.all().filter("word =", "lucrative").get()
+
+        self.assertEqual("profitable", new_entry.meaning)
+        self.assertEqual("[adj]", new_entry.pronounce)
 
 
 if __name__ == "__main__":

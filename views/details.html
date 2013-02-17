@@ -11,11 +11,12 @@ $( document ).ready(function() {
     dataType: "json",
     success: function( json ){
       var $answerTable = $("<table>", {class:"table"});
+
       var tableRows = [];
 
       for(i=0; i<json.length; i++){
         var item = json[i];
-        var row  = "<tr><td>" + item.word + "</td>";
+        var row  = "<tr><td id='editCell'></td><td>" + item.word + "</td>";
         row = row + "<td>"
         for(j=0; j<item.answers.length; j++){
           if (item.answers[j].status=="match"){
@@ -39,6 +40,7 @@ $( document ).ready(function() {
       }
       $answerTable.append( tableRows.join("") );
       $answerTable.append("</table>");
+      $answerTable.delegate()
       $answerTable.appendTo("#answerblock");
       
     }
@@ -56,18 +58,21 @@ $( document ).ready(function() {
           <li><a href="/vocabulary">Vocabulary</a></li>
           <li><a href="/profile">Profile</a></li>
           <li><a href="/signout">Log out</a></li>
+          
         </ul>
-
+        <ul class="nav pull-right">
+          <li class=".pull-right"><h4>{{ stats_dict.total_points }}<small> total points</small></h4></li>
+          <li class="divider-vertical"></li>
+          <li><h4>{{ stats_dict.total_words }}<small> words learned</small></h4></li>
+        </ul>
+   
       </div>
     </div> <!-- Navigation Bar-->
       <div class="row">
         <div class="span3">          
           <div class="well">
+            <h4>Latest from your friends</h4>
 
-            <span class="badge badge-info">{{ stats_dict.total_points }}
-                 </span> total points earned</br>
-            <span class="badge badge-info">{{ stats_dict.total_words }}
-                  </span> words learned</br>
           </div>
       </div> <!-- Sidebar -->
 

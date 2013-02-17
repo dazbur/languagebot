@@ -30,7 +30,7 @@ application = webapp.WSGIApplication(
                                     ('/register', Register),
                                     ('/login', Login),
                                     ('/signout', Signout),
-                                    ('/check_incoming',CheckIncoming),
+                                    ('/check_incoming', CheckIncoming),
                                     ('/send_messages', SendMessagesScheduler),
                                     ('/build_daily_list', BuildDailyListScheduler),
                                     ('/send_daily_mail', SendDailyMail),

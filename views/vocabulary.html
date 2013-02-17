@@ -1,6 +1,95 @@
 {% extends "base.html" %}
+{% block top %}
+<script>
+$( document ).ready(function() {
+  
+  $("#VocabularyTable").delegate('tr', 'mouseenter', function() {
+    $(this).find("#editCell").append("<a role='button' class='editDialog btn btn-mini'><i class='icon-pencil'></i></a>&nbsp;&nbsp;");
+    $(this).find("#editCell").append("<a role='button' class='deleteDialog btn btn-mini' href='#myModal' data-toggle='modal'><i class='icon-trash'> </i></a>");
+  });
+
+  $("#VocabularyTable").delegate('tr', 'mouseleave', function() {
+    $(this).find("#editCell").html("");
+  });
+});
+
+$( document ).on("click", ".editDialog", function () {
+     var editWord = $(this).parent().parent().find("#wordCell").html();
+     var editMeaning = $(this).parent().parent().find("#meaningCell").html();
+     $(".modal-body #editField").val( editWord + ": " + editMeaning );
+     $(".modal-body #editField").data('originalWord', editWord);
+    $('#editModal').modal('show');
+});
+
+$( document ).on("click", ".deleteDialog", function () {
+     var deleteWord = $(this).parent().parent().find("#wordCell").html();
+     deleteWord = $.trim(deleteWord)
+     $(".deleteModalHeader #deleteDialogHeader").html("Delete entry for '"+deleteWord+"'?");
+     $(".deleteModalHeader #deleteDialogHeader").data('word', deleteWord);
+    $('#deleteModal').modal('show');
+});
+
+$( document ).on("click", ".editSave", function () {
+     var editString = $(".modal-body #editField").val();
+     var originalWord =$(".modal-body #editField").data('originalWord');
+     $.ajax({
+        url: "rpc",
+        data:{action : "editDictEntry", 
+              original : originalWord,
+              newentry: editString},
+        type: "POST",
+        dataType: "json",
+        success: function( json ){
+          $('#editModal').modal('hide');
+          location.reload(true);
+        }
+      })
+});
+
+$( document ).on("click", ".deleteSave", function () {
+     var deleteWord =$(".deleteModalHeader #deleteDialogHeader").data('word');
+     $.ajax({
+        url: "rpc",
+        data:{action : "deleteDictEntry", 
+              word : deleteWord},
+        type: "POST",
+        dataType: "json",
+        success: function( json ){
+          $('#deleteModal').modal('hide');
+          location.reload(true);
+        }
+      })
+});
+
+</script>
+{% endblock %}
 
 {% block content %}
+<div id="editModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="editDialogHeader">Edit word</h3>
+  </div>
+  <div class="modal-body" id="editDialogBody">
+      <input class="input-xlarge" type="text" id="editField" value=""/>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+    <button class="editSave btn btn-primary ">Save changes</button>
+  </div>
+</div>
+
+<div id="deleteModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="deleteModalHeader modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+    <h3 id="deleteDialogHeader"></h3>
+  </div>
+  <div class="modal-footer">
+    <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+    <button class="deleteSave btn btn-danger">Delete</button>
+  </div>
+</div>
+
 <div class="container">
       <div class="navbar">
       <div class="navbar-inner">
@@ -26,8 +115,9 @@
         
         <div class="span9">
         	<h3>Your Vocabulary</h3>
-          <table class="table">
+          <table class="table" id="VocabularyTable">
             <thread>
+              <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
               <th>Word</th>
               <th>Meaning</th>
             </thread>
@@ -35,8 +125,9 @@
           
           {% for i in dict_row %}
             <tr>
-             <td>{{ i.0 }}</td>
-             <td>{{ i.1 }}</td>
+             <td id="editCell"></td>
+             <td id="wordCell">{{ i.0 }}</td>
+             <td id="meaningCell">{{ i.1 }}</td>
             </tr>
           {% endfor %}
           
