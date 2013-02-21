@@ -146,6 +146,9 @@ def processMessage(message):
     if not user:
         return
     parsed_dict = parseMessage(message.text, message.recipient_screen_name)
+    # Exit if message is not a valid dict_entry format
+    if parsed_dict == {}:
+        return
     question = checkForAnswer(parsed_dict, twitter_user)
 
     # Check if message is an answer to a previously sent question

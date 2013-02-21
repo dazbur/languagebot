@@ -10,5 +10,7 @@ api = twitter.Api(consumer_key='8hUziMDlvgoMLOPskIrIA',
                 access_token_secret='4qqahAmLF230ooXE9FRtaWg69cilhvPGzVNJ8IrMhLQ',
                 debugHTTP=True)
 
-replies = api.GetDirectMessages()
-print [x for x in replies]
+user = api.GetUser(user="da_zbur")
+print user.id
+followers = api.GetFollowerIDs()["ids"]
+print [x for x in followers]

@@ -2966,7 +2966,7 @@ class Api(object):
     Returns:
       A sequence of twitter.User instances, one for each follower
     '''
-    url = 'http://twitter.com/followers/ids.json'
+    url = 'https://api.twitter.com/1.1/followers/ids.json'
     parameters = {}
     parameters['cursor'] = cursor
     if userid:

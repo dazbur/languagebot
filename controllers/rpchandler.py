@@ -11,6 +11,8 @@ from models.learnlist import LearnList
 
 
 def getLatestAnswers(user):
+        #TODO Need to make display follow the same comparison algorithm
+        # as in calculateAnswerRating
         latest_answers = []
         l = {}
         questions = Question.all().\

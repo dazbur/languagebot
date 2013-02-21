@@ -34,8 +34,9 @@
     {% endif %}
     </div>
  
-    <label>To confirm your twitter account please post the following tweet:
-    @LanguageBot {{model.registration_code}} and click Register</label>
+    <label>To confirm your twitter account please start following @LanguageBot 
+    and click Register. Make sure you let @LanguageBot to follow you since
+    this is Required for DM exchange</label>
     {% if model.code_not_received%}    
     <span class="error">You have not sent verification code to @LanguageBot.
     Please send the code above and try again. Note that it may take a few

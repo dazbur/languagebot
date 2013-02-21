@@ -417,25 +417,28 @@ moneymaking, remunerative [1]"], m_list)
         original = 'profitable, moneymaking, remunerative'
 
         # No match == -POINTS_PER_GUESS
-        res = calculateAnswerRating(original, '-');
+        res = calculateAnswerRating(original, '-')
         self.assertEqual(-POINTS_PER_GUESS, res)
-        # One good match == POINTS_PER_GUESS 
-        res = calculateAnswerRating(original, 'moneymaking');
+        # One good match == POINTS_PER_GUESS
+        res = calculateAnswerRating(original, 'moneymaking, blah')
         self.assertEqual(POINTS_PER_GUESS, res)
-        # One partially good match 
-        res = calculateAnswerRating(original, 'profetabl');
+        # One partially good match
+        res = calculateAnswerRating(original, 'profetabl')
         self.assertTrue(POINTS_PER_GUESS, res)
         # Full match PPGx1 + PPGx2 + PPGx3
         res = calculateAnswerRating(original,\
-             'profitable,moneymaking,remunerative');
-        self.assertEqual(POINTS_PER_GUESS + 2*POINTS_PER_GUESS+\
-            3*POINTS_PER_GUESS, res)
+             'profitable,moneymaking,remunerative')
+        self.assertEqual(POINTS_PER_GUESS + 2 * POINTS_PER_GUESS + \
+            3 * POINTS_PER_GUESS, res)
         # Full match with errors  80<= res <100
-        res = calculateAnswerRating(original, 'profitable,monemeking');
+        res = calculateAnswerRating(original, 'profitable,monemeking')
         self.assertTrue(POINTS_PER_GUESS, res)
         # One correct and one wrong
-        res = calculateAnswerRating(original, 'monemeking, expensive');
+        res = calculateAnswerRating(original, 'monemeking, expensive')
         self.assertTrue(POINTS_PER_GUESS, res)
+        res = calculateAnswerRating(u"прокос, ряд, широкий профиль", \
+            u"прокос, полоса")
+        self.assertEqual(POINTS_PER_GUESS, res)
 
     def testQuestionAdding(self):
         # This is testing buildDailyList method to make sure that
