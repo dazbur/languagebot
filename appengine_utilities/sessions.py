@@ -427,7 +427,7 @@ class Session(object):
         self.no_cache_headers()
         # Check the cookie and, if necessary, create a new one.
         self.cache = {}
-        string_cookie = os.environ.get(u"HTTP_COOKIE", u"")
+        string_cookie = os.environ.get("HTTP_COOKIE", "")
         self.cookie = Cookie.SimpleCookie()
         self.output_cookie = Cookie.SimpleCookie()
         self.cookie.load(string_cookie)

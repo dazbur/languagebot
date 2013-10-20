@@ -5,26 +5,18 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 
 from current_session import current_user
-from request_model_binder import model_from_request
 from models.users import User
 from models.learnlist import LearnList
-from models.questions import Question
-from models.dictionary import Dictionary
 from controllers.incoming import parseMessage
 from controllers.incoming import addNewWord
+
 
 def getParameters(user):
     parameters = {}
     parameters["dict_row"] = []
-    
-    if not user:
-        parameters["username"] = "Please log in"
-        return parameters
-    else:
-        parameters["username"] = user.username
-
-    for lli in LearnList.all().filter("twitter_user =", user.twitter).\
-        order("next_serve_date").run():
+    parameters["username"] = user.username
+    for lli in LearnList.all().filter("twitter_user =", user.twitter)\
+                              .order("next_serve_date").run():
         l = []
         l.append(lli.dict_entry.word+" "+lli.dict_entry.pronounce)
         l.append(lli.dict_entry.meaning)
@@ -32,16 +24,27 @@ def getParameters(user):
         parameters["dict_row"].append(l)
     return parameters
 
+
 class Vocabulary(webapp.RequestHandler):
 
-    def view(self, parameters):
-        self.response.out.write(template.render("views/vocabulary.html",
-        	 parameters))
+    def view(self, parameters, template_file):
+        self.response.out.write(template.render(template_file,
+                                                parameters))
 
     def get(self):
-        user = current_user()
-        parameters = getParameters(user)
-        self.view(parameters)
+        user_name = self.request.path.split('/')[-1]
+        viewed_user = User.all().filter("username =", user_name)\
+                                .get()
+        curr_user = current_user()
+        # If non-existing user is specified on URL
+        if (user_name != "") and (viewed_user is None):
+            self.error(404)
+        if viewed_user:
+            parameters = getParameters(viewed_user)
+            self.view(parameters, "views/view_vocabulary.html")
+        elif curr_user:
+            parameters = getParameters(curr_user)
+            self.view(parameters, "views/vocabulary.html")
 
     def post(self):
         user = current_user()

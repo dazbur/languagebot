@@ -1,5 +1,5 @@
 # coding=utf8
-import simplejson
+import json
 import logging
 from google.appengine.ext import webapp
 
@@ -8,6 +8,7 @@ from controllers.incoming import parseMessage, parseOpt
 from models.questions import Question
 from models.dictionary import Dictionary
 from models.learnlist import LearnList
+from models.users import User
 
 
 def getLatestAnswers(user):
@@ -40,7 +41,17 @@ def getLatestAnswers(user):
             for i in wrong:
                 l["answers"].append({"answer_text": i, "status": "wrong"})
             latest_answers.append(l)
-        return simplejson.dumps(latest_answers)
+        return json.dumps(latest_answers)
+
+
+def getUsers():
+    userlist = []
+    for user in User.all().order("-total_points").run():
+        c = Dictionary.all().\
+            filter("twitter_user =", user.twitter).count()
+        userlist.append({"username": user.twitter, "points": user.total_points,
+                        "wordscount": c})
+    return json.dumps(userlist)
 
 
 def editDictEntry(user, original_word, new_string):
@@ -55,7 +66,7 @@ def editDictEntry(user, original_word, new_string):
             dict_entry.meaning = parsed_dict["meaning"]
             dict_entry.pronounce = parsed_dict["pronounce"]
             dict_entry.put()
-    return simplejson.dumps({})
+    return json.dumps({})
 
 
 def deleteDictEntry(user, word):
@@ -70,7 +81,7 @@ def deleteDictEntry(user, word):
             q.delete()
         lli.delete()
         dict_entry.delete()
-    return simplejson.dumps({})
+    return json.dumps({})
 
 
 class RPCHandler(webapp.RequestHandler):
@@ -82,6 +93,9 @@ class RPCHandler(webapp.RequestHandler):
             action = self.request.get("action")
             if action == "getLatestAnswers":
                 result = getLatestAnswers(user)
+                self.response.out.write(result)
+            if action == "getUsers":
+                result = getUsers()
                 self.response.out.write(result)
         else:
             self.error(404)

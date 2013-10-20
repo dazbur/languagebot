@@ -90,7 +90,7 @@ $( document ).on("click", ".deleteSave", function () {
   </div>
 </div>
 
-<div class="container">
+<div class="container"> <!-- Navigation Bar-->
       <div class="navbar">
       <div class="navbar-inner">
         <ul class="nav">
@@ -103,24 +103,25 @@ $( document ).on("click", ".deleteSave", function () {
       </div>
     </div> <!-- Navigation Bar-->
     <div class="row">
-        <div class="span3">          
+        
+        <div class="span3"><!-- Sidebar -->          
           <div class="well">
 		    <form method="post">
                 <input  type="text" name="new_word" 
                     placeholder="word: meaning1,meaning2,..."/>
                 <button type="submit" class="btn"/>Add new word
-              <form>
+        </form>
           </div>
         </div> <!-- Sidebar -->
         
         <div class="span9">
         	<h3>Your Vocabulary</h3>
           <table class="table" id="VocabularyTable">
-            <thread>
+            <thead>
               <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
               <th>Word</th>
               <th>Meaning</th>
-            </thread>
+            </thead>
           <tbody>
           
           {% for i in dict_row %}

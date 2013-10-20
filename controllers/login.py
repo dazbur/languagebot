@@ -27,9 +27,9 @@ class Login(webapp.RequestHandler):
 
         # load user by username and password...
         user = User.all()\
-                .filter("username =", username)\
-                .filter("password =", pwd_hash.hexdigest())\
-                .get()
+                   .filter("username =", username)\
+                   .filter("password =", pwd_hash.hexdigest())\
+                   .get()
         if user:
             set_current_user(user)
             self.redirect("/details")

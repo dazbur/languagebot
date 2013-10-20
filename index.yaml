@@ -17,3 +17,8 @@ indexes:
   - name: twitter_user
   - name: answer_received
     direction: desc
+
+- kind: User
+  properties:
+  - name: total_points
+    direction: desc

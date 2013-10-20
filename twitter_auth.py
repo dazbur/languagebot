@@ -1,42 +1,42 @@
 from google.appengine.ext import db
 
 import twitter
+import ConfigParser
 
 class Twitter:
     instance = None
-    
+
     class TwitterHelper:
         def __call__( self, *args, **kw ) :
             if Twitter.instance is None :
                 object = Twitter()
                 Twitter.instance = object
-                    
+
             return Twitter.instance
 
     getInstance = TwitterHelper()
 
     def __init__(self):
-        
+
         if not Twitter.instance == None :
             raise RuntimeError, 'Only one instance of Twitter is allowed!'
-        
-        # Login into twitter account
-        self.api = twitter.Api(consumer_key='8hUziMDlvgoMLOPskIrIA',
-                    consumer_secret='qU86upQ36NogZw7y5HvXvR1Ki6uvH4P7GXlYwpas4',
-                    access_token_key='361573893-OuCJBZNnHGjprS0dQxwXeey0GcEjsjdJ3phEc3VH',
-                    access_token_secret='4qqahAmLF230ooXE9FRtaWg69cilhvPGzVNJ8IrMhLQ',
-                    debugHTTP=True)
-        
+        config = ConfigParser.RawConfigParser()
+        config.read('twitter.cfg')
+        self.consumer_key = config.get('api', 'consumer_key')
+        self.consumer_secret = config.get('api', 'consumer_secret')
+        self.access_token_key = config.get('api', 'access_token_key')
+        self.access_token_secret = config.get('api', 'access_token_secret')
+        self.authenticate()
 
     def authenticate(self):
-        self.api = twitter.Api(consumer_key='8hUziMDlvgoMLOPskIrIA',
-                    consumer_secret='qU86upQ36NogZw7y5HvXvR1Ki6uvH4P7GXlYwpas4',
-                    access_token_key='361573893-OuCJBZNnHGjprS0dQxwXeey0GcEjsjdJ3phEc3VH',
-                    access_token_secret='4qqahAmLF230ooXE9FRtaWg69cilhvPGzVNJ8IrMhLQ',
-                    debugHTTP=True)
-        
-                    
-        
+        """ Authenticating to Twitter account """
+        self.api = twitter.Api(consumer_key=self.consumer_key,
+                    consumer_secret=self.consumer_secret,
+                    access_token_key=self.access_token_key,
+                    access_token_secret=self.access_token_secret)
+
+
+
 
 
 

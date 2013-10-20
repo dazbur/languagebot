@@ -4,324 +4,72 @@
 		"selected_items":
 		[
 			[
-				"fahr",
-				"fahr2celc"
-			],
-			[
-				"fa",
-				"fahr"
-			],
-			[
-				"ack",
-				"acknowledgeQuestions"
-			],
-			[
-				"un",
-				"unack_count"
-			],
-			[
-				"answe",
-				"answer_received"
-			],
-			[
-				"in",
-				"in_reply_to_status_id"
-			],
-			[
-				"path",
-				"path_current"
-			],
-			[
-				"email",
-				"emails_dict"
-			],
-			[
-				"res",
-				"res_dict"
-			],
-			[
-				"emai",
-				"emails_dict"
-			],
-			[
-				"messag",
-				"message"
-			],
-			[
-				"em",
-				"emails_dict"
-			],
-			[
-				"pre",
-				"prepareEmailMessagesGenerator"
-			],
-			[
-				"wor",
-				"word"
-			],
-			[
-				"dc",
-				"dict_entry"
-			],
-			[
-				"ema",
-				"email_text"
-			],
-			[
-				"tw",
-				"twitter"
-			],
-			[
-				"twe",
-				"twitter_user"
-			],
-			[
-				"next",
-				"next_serve_date"
-			],
-			[
-				"Le",
-				"LearnList"
-			],
-			[
-				"ma",
-				"maxint"
-			],
-			[
-				"me",
-				"message_dict"
-			],
-			[
-				"pa",
-				"parsed_dict"
-			],
-			[
-				"la",
-				"latest_answer_rating"
-			],
-			[
-				"ans",
-				"answer_rating"
-			],
-			[
-				"nex",
-				"next_serve_date"
-			],
-			[
-				"e",
-				"efactor"
-			],
-			[
-				"lli",
-				"lli_ref"
-			],
-			[
-				"procss",
-				"processMessage"
-			],
-			[
-				"us",
-				"user_screen_name"
+				"sql",
+				"sqlparser  (module)"
 			],
 			[
 				"q",
-				"question"
+				"query_type"
 			],
 			[
-				"learn",
-				"learnListItem"
+				"Query",
+				"QueryFactory"
 			],
 			[
-				"que",
-				"question"
+				"ge",
+				"get_statement_type"
 			],
 			[
-				"qu",
-				"question"
+				"ass",
+				"assertEqual  (function)"
 			],
 			[
-				"an",
-				"answer_rating"
-			],
-			[
-				"dic",
-				"dict_entry"
-			],
-			[
-				"cal",
-				"calculateAnswerRating"
-			],
-			[
-				"check",
-				"checkForAnswer"
-			],
-			[
-				"Tw",
-				"Twitter"
-			],
-			[
-				"twi",
-				"twitter"
-			],
-			[
-				"bui",
-				"buildDailyList"
-			],
-			[
-				"ha",
-				"hashlib"
-			],
-			[
-				"le",
-				"learnListItem"
-			],
-			[
-				"use",
-				"use_questions"
-			],
-			[
-				"ratin",
-				"rating_list"
-			],
-			[
-				"words",
-				"words_count"
-			],
-			[
-				"appen",
-				"append"
-			],
-			[
-				"origi",
-				"original_list"
-			],
-			[
-				"o",
-				"original_list"
-			],
-			[
-				"con",
-				"container"
-			],
-			[
-				"nexr_",
-				"next_serve_time"
-			],
-			[
-				"ne",
-				"next_serve_time"
-			],
-			[
-				"messa",
-				"message"
-			],
-			[
-				"lo",
-				"logging"
-			],
-			[
-				"send",
-				"sendMessages"
-			],
-			[
-				"new_",
-				"new_efactor"
-			],
-			[
-				"to",
-				"total_served"
-			],
-			[
-				"lear",
-				"learnListItem"
-			],
-			[
-				"Twi",
-				"TwitterMockup"
-			],
-			[
-				"as",
-				"assertEqual"
-			],
-			[
-				"pro",
-				"pronounce"
-			],
-			[
-				"mes",
-				"message_list"
-			],
-			[
-				"interv",
-				"interval_gen"
-			],
-			[
-				"sec",
-				"seconds_interval"
+				"Make",
+				"MakeTables  (function)"
 			],
 			[
 				"get",
-				"getNextRunInterval"
+				"getMedianForBucket  (function)"
 			],
 			[
-				"en",
-				"enabled"
+				"log",
+				"log10  (function)"
 			],
 			[
-				"mr_",
-				"mr_2_per_day"
+				"g",
+				"getEntryById  (function)"
 			],
 			[
-				"mess",
-				"messages_per_day"
+				"re",
+				"reader  (function)"
 			],
 			[
-				"add",
-				"addDays"
+				"thi",
+				"thinkstats  (module)"
 			],
 			[
-				"messages",
-				"messages_per_day"
+				"it",
+				"iteritems  (function)"
 			],
 			[
-				"dail",
-				"dailyList"
+				"s",
+				"sub  (function)"
 			],
 			[
-				"cre",
-				"createLearnListItem"
+				"Re",
+				"ReadRecords  (function)"
 			],
 			[
-				"learnLi",
-				"createLearnListItem"
+				"Al",
+				"AlbumID"
 			],
 			[
-				"nr",
-				"next_serve_date"
+				"in",
+				"inputarray"
 			],
 			[
-				"dict",
-				"dictEntry"
-			],
-			[
-				"ac",
-				"account_enabled"
-			],
-			[
-				"twit",
-				"twitter_user"
-			],
-			[
-				"user",
-				"username"
-			],
-			[
-				"lea",
-				"learnListItem"
-			],
-			[
-				"f",
-				"filter"
+				"db0",
+				"db07_tables"
 			]
 		]
 	},
@@ -331,11 +79,23 @@
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 0.0,
+		"height": 267.0,
 		"selected_items":
 		[
+			[
+				"Package Control: ",
+				"Package Control: Install Package"
+			],
+			[
+				"Packag",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control:",
+				"Package Control: Install Package"
+			]
 		],
-		"width": 0.0
+		"width": 567.0
 	},
 	"console":
 	{
@@ -352,49 +112,87 @@
 	},
 	"file_history":
 	[
-		"/Volumes/Data/Projects/C/exercises/exercise1-17.c",
-		"/Volumes/Data/Projects/C/exercises/exercise1-13.c",
-		"/Volumes/Data/Projects/C/exercises/exercise1-14.c",
-		"/Volumes/Data/Projects/C/exercises/fahr2celsius.c",
-		"/Volumes/Data/Projects/languagebot/index.yaml",
-		"/Volumes/Data/Projects/languagebot/twitter.py",
-		"/Volumes/Data/Projects/languagebot/tests/twitter_mockup.py",
-		"/Volumes/Data/Projects/languagebot/tests/tests.py",
-		"/Volumes/Data/Projects/languagebot/langbot_globals.py",
-		"/Volumes/Data/Projects/languagebot/controllers/admin.py",
-		"/Volumes/Data/Projects/languagebot/cron.yaml",
-		"/Volumes/Data/Projects/languagebot/langbot_main.py",
-		"/Volumes/Data/Projects/languagebot/controllers/incoming.py",
-		"/Volumes/Data/Projects/languagebot/models/users.py",
-		"/Volumes/Data/Projects/languagebot/controllers/learnlist.py",
-		"/Volumes/Data/Projects/languagebot/models/questions.py",
-		"/Volumes/Data/Projects/languagebot/models/learnlist.py",
-		"/Volumes/Data/Projects/languagebot/controllers/home.py",
-		"/Volumes/Data/Projects/languagebot/controllers/details.py",
-		"/Volumes/Data/Projects/languagebot/views/details.html",
-		"/Volumes/Data/Projects/languagebot/views/base.html",
-		"/Volumes/Data/Projects/languagebot/views/daily_email.html",
-		"/Volumes/Data/Projects/languagebot/app.yaml",
-		"/Volumes/Data/Projects/languagebot/controllers/profile.py",
-		"/Volumes/Data/Projects/languagebot/views/profile.html",
-		"/Volumes/Data/Projects/languagebot/controllers/register.py",
-		"/Volumes/Data/Projects/languagebot/twitter_auth.py",
-		"/Volumes/Data/Projects/languagebot/request_model_binder.py",
-		"/Volumes/Data/Projects/languagebot/models/dictionary.py",
-		"/Volumes/Data/Projects/languagebot/models/status.py",
-		"/Volumes/Data/Projects/languagebot/fuzzy_comparison.py",
-		"/Volumes/Data/Projects/languagebot/views/login.html",
-		"/Volumes/Data/Projects/languagebot/styles/doc.css",
-		"/Volumes/Data/Projects/languagebot/views/index.html",
-		"/Volumes/Data/Projects/languagebot/styles/main.css",
-		"/Volumes/Data/Projects/languagebot/views/register.html",
-		"/Volumes/Data/Projects/bootstrap/details.html",
-		"/Volumes/Data/Projects/languagebot/controllers/sendmessages.py",
-		"/Volumes/Data/Projects/languagebot/models/dailylist.py",
-		"/Volumes/Data/Projects/Pythian/repository/mysql/scripts/Pythian/tools/mysql_multicheck/mysqllocalcheck_multiple.pl",
-		"/Volumes/Data/Projects/Pythian/repository/mysql/scripts/Pythian/tools/mysql_multicheck/user_audit.pl",
-		"/Volumes/Data/Projects/Pythian/repository/mysql/scripts/Pythian/tools/fillIblog/fill_iblogs.pl",
-		"/Volumes/Data/Projects/languagebot/controllers/login.py"
+		"/Users/zburivsky/Projects/Haskell/H-99/ex.hs",
+		"/Users/zburivsky/Projects/Haskell/H-99/tmp.hs",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/sql/build_schema.sh",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/incremental/incremental-medianet-load.py",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/incremental/sqlparser.py",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/incremental/python_db_util/mysql/MySQLTemplate.py",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/sql/daisy_triggers.sql",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/sql/daisy_metadata_populate.sql",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/incremental/tests.py",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/incremental/testdata/test.sql",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/incremental/flow.py",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/incremental/python_db_util/mysql/DBTemplate.py",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/incremental/python_db_util/mysql/RowMapper.py",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/incremental/python_db_util/mysql/SQLProcessor.py",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/incremental/queryreader.py",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/sql/daisy_metadata_create.sql",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr-table-creation/src/sql/generate_triggers.py",
+		"/Users/zburivsky/Library/Application Support/Sublime Text 2/Packages/User/Preferences.sublime-settings",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/parse_sysbench.py",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/parse-sysbench-2.py",
+		"/Users/zburivsky/Library/Application Support/Sublime Text 2/Packages/Default/Preferences.sublime-settings",
+		"/Users/zburivsky/Projects/ThinkStats/thinkstats-read-only/workspace.thinkstats/ThinkStats/Pmf.py",
+		"/Users/zburivsky/Projects/ThinkStats/thinkstats-read-only/workspace.thinkstats/ThinkStats/descriptive.py",
+		"/Users/zburivsky/Projects/ThinkStats/thinkstats-read-only/workspace.thinkstats/ThinkStats/first.py",
+		"/Users/zburivsky/Projects/ThinkStats/thinkstats-read-only/workspace.thinkstats/ThinkStats/survey.py",
+		"/Users/zburivsky/Projects/ThinkStats/thinkstats-read-only/workspace.thinkstats/ThinkStats/exercise2-2.py",
+		"/Users/zburivsky/Projects/ThinkStats/thinkstats-read-only/workspace.thinkstats/ThinkStats/exercise2-6.py",
+		"/Users/zburivsky/Library/Application Support/Sublime Text 2/Packages/Pylinter/Pylinter.sublime-settings",
+		"/Users/zburivsky/Library/Application Support/Sublime Text 2/Packages/User/Pylinter.sublime-settings",
+		"/Users/zburivsky/Library/Application Support/Sublime Text 2/Packages/User/Default (OSX).sublime-keymap",
+		"/Users/zburivsky/Library/Application Support/Sublime Text 2/Packages/Pylinter/Default (OSX).sublime-keymap",
+		"/Users/zburivsky/Projects/ThinkStats/thinkstats-read-only/workspace.thinkstats/ThinkStats/exercise2-4.py",
+		"/Users/zburivsky/Projects/ThinkStats/thinkstats-read-only/workspace.thinkstats/ThinkStats/exercise2-5.py",
+		"/Users/zburivsky/Projects/Kaggle/ClickFix/data/tfidf.py",
+		"/Users/zburivsky/Projects/Kaggle/ClickFix/data/basic.py",
+		"/Users/zburivsky/Projects/Kaggle/ClickFix/data/compare.py",
+		"/Users/zburivsky/Projects/Kaggle/ClickFix/data/visualize.py",
+		"/Users/zburivsky/Projects/Kaggle/ClickFix/data/common.py",
+		"/Users/zburivsky/Projects/Kaggle/ClickFix/data/predictorize.py",
+		"/Users/zburivsky/Projects/Kaggle/ClickFix/data/tf-idf.py",
+		"/Users/zburivsky/Projects/Kaggle/ClickFix/data/bucketize.py",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/mysql-stats-collect/stats.py",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/sysbench/sysbench/tests/db/parallel_prepare.lua",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/sysbench/sysbench/tests/db/common.lua",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/sysbench/sysbench/tests/db/oltp.lua",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/galera/fg-db-test.lua",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/sysbench/sysbench/scripting/lua/src/lua.h",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/sysbench/sysbench/scripting/lua/README",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/galera/sqlfingerprint.py",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib/tapservice/untitled",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib/tapservice/game.py",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib/tapservice/views/interfaces.py",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib/tapservice/views/api.py",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib/tapservice/models.py",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib/tapservice/urls.py",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib/docs/server_api.rst",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib/tapservice/game_registry.py",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib/tapservice/views/public.py",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib/gamestate/dynamodb.py",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib/gamestate/models.py",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib/docs/introduction.rst",
+		"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib/tapservice/templates/tapservice/backupblob.html",
+		"/Users/zburivsky/Projects/ThinkStats/thinkstats-read-only/workspace.thinkstats/ThinkStats/ex13.py",
+		"/Users/zburivsky/Projects/ThinkStats/thinkstats-read-only/workspace.thinkstats/ThinkStats/ex1-3.py",
+		"/Users/zburivsky/Projects/DroneHackathon/code/node/reset-dron.js",
+		"/Users/zburivsky/Projects/DroneHackathon/code/node/untitled.js",
+		"/Users/zburivsky/Projects/DroneHackathon/code/node/drone-clinet.js",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/daisy_metadata_tables_create.sql",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/daisy_table_populate.sql",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/rovi_table_populate.sql",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/rovi_tables_create.sql",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/solr_views.sql",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/rovi_table_create.sql",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/daisy_metadata_tables.sql",
+		"/Users/zburivsky/Projects/Pythian/clients/BeatsMusic/daisy_table_create.sql",
+		"/Users/zburivsky/Projects/tmp/randarray.py",
+		"/Users/zburivsky/Projects/tmp/fb.py",
+		"/Users/zburivsky/Library/Application Support/Sublime Text 2/Packages/User/Python.sublime-settings",
+		"/Users/zburivsky/Downloads/user_session_play_stream.py",
+		"/Users/zburivsky/Downloads/nielsen_generator.py",
+		"/Users/zburivsky/Projects/Pythian/clients/AKAD/get_table_list.py"
 	],
 	"find":
 	{
@@ -405,6 +203,7 @@
 		"height": 0.0,
 		"where_history":
 		[
+			"/Users/zburivsky/Projects/Pythian/clients/TINYCO/Galera/repos/tinyservicelib"
 		]
 	},
 	"find_state":
@@ -412,17 +211,20 @@
 		"case_sensitive": false,
 		"find_history":
 		[
-			"MININTERVAL",
-			"answer_received",
-			"question.lli_ref.next_serve_time = 0\n            question.lli_ref.next_serve_date = today\n            question.put()\n",
-			"sendMessagesGenerator",
-			"Status",
-			"PostUpdate",
-			"TwitterError",
-			"../assets/",
-			"getNextRunInterval",
-			"    def testProcessMessageFromExistingUserButNotReply(self):\n    def testProcessMessageFromExistingUserButNotReply(self):\n    def testProcessMessageFromExistingUserButNotReply(self):\n    def testProcessMessageFromExistingUserButNotReply(self):\ngetNextRunInterval",
-			"getNextRunInterval"
+			"_is_comment",
+			"logging",
+			"qr.queries",
+			"self.getBucketNumber",
+			"Transaction",
+			"TapCallForm",
+			"form",
+			"();\n",
+			" \n",
+			"rovi",
+			"created_date",
+			"Munich",
+			"created_date",
+			"\n"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -430,7 +232,8 @@
 		"regex": false,
 		"replace_history":
 		[
-			""
+			"flow.statements",
+			"getBucketNumber"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -477,6 +280,10 @@
 		]
 	},
 	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 112.0
+	},
 	"replace":
 	{
 		"height": 64.0
@@ -501,7 +308,7 @@
 	"show_minimap": false,
 	"show_open_files": false,
 	"show_tabs": true,
-	"side_bar_visible": true,
-	"side_bar_width": 212.0,
+	"side_bar_visible": false,
+	"side_bar_width": 280.0,
 	"status_bar_visible": true
 }
