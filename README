@@ -1,0 +1,10 @@
+This was supposed to be a project that helps me to learn new words
+using Twitter.
+
+The idea is to send new words and their meanings to a twitter bot and it will
+then start spitting those words back to you using Spaced Repetition (http://www.gwern.net/Spaced%20repetition?2) to vary intervals. It will also do a quiz
+from time to time asking meaning of the word and adjust your score accordingly.
+
+All these menagerie is running on Google Apps Engine platform — http://langbot-stage.appspot.com/login
+
+Right now project is in a kind of frozen state and needs a mojor cleanup.
